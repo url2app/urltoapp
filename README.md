@@ -1,4 +1,14 @@
-# U2A (URL to App)
+<div align="center">
+  <a href="#" style="display: block; text-align: center;">
+    <img 
+      alt="Image of this repo" 
+      src="https://togp.xyz?owner=douxxtech&repo=urltoapp&theme=json-dark-all&cache=false" 
+      type="image/svg+xml" 
+      style="border-radius: 20px; overflow: hidden;" 
+    />
+    <h1 align="center">U2A (URL to App)</h1>
+  </a>
+</div>
 
 ![U2A Banner](https://img.shields.io/badge/U2A-URL%20to%20App-blue)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green)
