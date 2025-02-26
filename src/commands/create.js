@@ -11,14 +11,14 @@ const logger = new Logger('create');
 
 function createWindowsShortcut(appInfo) {
   try {
-    const { domain, appDir, iconPath } = appInfo;
+    const { appName, appDir, iconPath } = appInfo;
     const startMenuPath = path.join(process.env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'U2A Apps');
 
     if (!fs.existsSync(startMenuPath)) {
       fs.mkdirSync(startMenuPath, { recursive: true });
     }
 
-    const shortcutPath = path.join(startMenuPath, `${domain}.lnk`);
+    const shortcutPath = path.join(startMenuPath, `${appName}.lnk`);
     const targetPath = path.join(appDir, 'node_modules', '.bin', 'electron.cmd');
     const workingDir = appDir;
 
@@ -29,11 +29,11 @@ function createWindowsShortcut(appInfo) {
       $Shortcut.Arguments = "."
       $Shortcut.WorkingDirectory = "${workingDir.replace(/\\/g, '\\\\')}"
       $Shortcut.IconLocation = "${iconPath.replace(/\\/g, '\\\\')}"
-      $Shortcut.Description = "Application Web pour ${domain}"
+      $Shortcut.Description = "Application Web pour ${appName}"
       $Shortcut.Save()
     `;
 
-    const tempScriptPath = path.join(os.tmpdir(), `create_shortcut_${domain}.ps1`);
+    const tempScriptPath = path.join(os.tmpdir(), `create_shortcut_${appName}.ps1`);
     fs.writeFileSync(tempScriptPath, psScript);
 
     execSync(`powershell -ExecutionPolicy Bypass -File "${tempScriptPath}"`, {
@@ -53,7 +53,7 @@ function createWindowsShortcut(appInfo) {
 
 function createLinuxDesktopEntry(appInfo) {
   try {
-    const { domain, url, appDir, iconPath } = appInfo;
+    const { appName, url, appDir, iconPath } = appInfo;
     const appsDir = path.join(os.homedir(), '.local', 'share', 'applications');
 
     if (!fs.existsSync(appsDir)) {
@@ -62,7 +62,7 @@ function createLinuxDesktopEntry(appInfo) {
 
     const desktopEntry = `[Desktop Entry]
 Type=Application
-Name=${domain}
+Name=${appName}
 Exec=${path.join(appDir, 'node_modules', '.bin', 'electron')} ${path.join(appDir, 'main.js')}
 Icon=${iconPath}
 Comment=Application Web pour ${url}
@@ -70,7 +70,7 @@ Categories=Network;WebBrowser;
 Terminal=false
 `;
 
-    const desktopFilePath = path.join(appsDir, `u2a-${domain}.desktop`);
+    const desktopFilePath = path.join(appsDir, `u2a-${appName}.desktop`);
     fs.writeFileSync(desktopFilePath, desktopEntry);
 
     fs.chmodSync(desktopFilePath, '755');
@@ -85,15 +85,14 @@ Terminal=false
 
 function createMacOSApp(appInfo) {
   try {
-    const { domain, appDir, iconPath } = appInfo;
+    const { appName, appDir, iconPath } = appInfo;
     const appsDir = path.join(os.homedir(), 'Applications', 'U2A Apps');
 
     if (!fs.existsSync(appsDir)) {
       fs.mkdirSync(appsDir, { recursive: true });
     }
 
-    const appName = `${domain}.app`;
-    const appPath = path.join(appsDir, appName);
+    const appPath = path.join(appsDir, `${appName}.app`);
     const macOsPath = path.join(appPath, 'Contents', 'MacOS');
     const resourcesPath = path.join(appPath, 'Contents', 'Resources');
 
@@ -109,11 +108,11 @@ function createMacOSApp(appInfo) {
     <key>CFBundleIconFile</key>
     <string>icon.icns</string>
     <key>CFBundleIdentifier</key>
-    <string>com.u2a.${domain}</string>
+    <string>com.u2a.${appName.replace(/\s+/g, '-')}</string>
     <key>CFBundleName</key>
-    <string>${domain}</string>
+    <string>${appName}</string>
     <key>CFBundleDisplayName</key>
-    <string>${domain}</string>
+    <string>${appName}</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
@@ -143,8 +142,8 @@ cd "${appDir}"
   }
 }
 
-function addAppToOS(domain, url, appDir, iconPath) {
-  const appInfo = { domain, url, appDir, iconPath };
+function addAppToOS(appName, url, appDir, iconPath) {
+  const appInfo = { appName, url, appDir, iconPath };
   let desktopPath = null;
 
   if (process.platform === 'win32') {
@@ -160,41 +159,46 @@ function addAppToOS(domain, url, appDir, iconPath) {
   return desktopPath;
 }
 
-function removeAppFromOS(domain) {
+function removeAppFromOS(appName) {
   try {
     if (process.platform === 'win32') {
-      const startMenuPath = path.join(process.env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'U2A Apps', `${domain}.lnk`);
+      const startMenuPath = path.join(process.env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'U2A Apps', `${appName}.lnk`);
       if (fs.existsSync(startMenuPath)) {
         fs.unlinkSync(startMenuPath);
         logger.success(`Shortcut removed from the Start Menu: ${startMenuPath}`);
       }
     } else if (process.platform === 'darwin') {
-      const appPath = path.join(os.homedir(), 'Applications', 'U2A Apps', `${domain}.app`);
+      const appPath = path.join(os.homedir(), 'Applications', 'U2A Apps', `${appName}.app`);
       if (fs.existsSync(appPath)) {
         fs.rmSync(appPath, { recursive: true, force: true });
         logger.success(`macOS application removed: ${appPath}`);
       }
     } else if (process.platform === 'linux') {
-      const desktopFilePath = path.join(os.homedir(), '.local', 'share', 'applications', `u2a-${domain}.desktop`);
+      const desktopFilePath = path.join(os.homedir(), '.local', 'share', 'applications', `u2a-${appName}.desktop`);
       if (fs.existsSync(desktopFilePath)) {
         fs.unlinkSync(desktopFilePath);
         logger.success(`Linux desktop entry removed: ${desktopFilePath}`);
       }
     }
   } catch (error) {
-    logger.error(`Error while removing desktop integration for ${domain}`, error);
+    logger.error(`Error while removing desktop integration for ${appName}`, error);
   }
 }
 
-function generateMainJs(domain, url, iconPath) {
+function generateMainJs(appName, url, iconPath, options = {}) {
+  const width = options.width || 1200;
+  const height = options.height || 800;
+
   return `
 const { app, BrowserWindow, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-const APP_DOMAIN = "${domain}";
+const APP_NAME = "${appName}";
 const APP_URL = "${url}";
 const APP_ICON_PATH = "${iconPath.replace(/\\/g, '\\\\')}";
+const WINDOW_WIDTH = ${width};
+const WINDOW_HEIGHT = ${height};
 
 let mainWindow;
 let splashWindow;
@@ -214,7 +218,7 @@ function logAppInfo() {
   console.log('\\n--------------------------------');
   console.log('  APPLICATION INFORMATION');
   console.log('--------------------------------');
-  console.log(\`Application: \${APP_DOMAIN}\`);
+  console.log(\`Application: \${APP_NAME}\`);
   console.log(\`URL: \${APP_URL}\`);
   console.log(\`Started at: \${new Date().toLocaleString()}\`);
   console.log(\`App directory: \${__dirname}\`);
@@ -390,7 +394,7 @@ function createSplashScreen() {
   </head>
   <body>
     <div class="container">
-      <div class="domain">\${APP_DOMAIN}</div>
+      <div class="domain">\${APP_NAME}</div>
       <div class="spinner"></div>
       <div id="loading-text" class="loading-text">Loading...</div>
       <div class="progress-bar">
@@ -413,7 +417,7 @@ function createSplashScreen() {
   </html>
   \`;
 
-  const splashPath = path.join(app.getPath('temp'), \`\${APP_DOMAIN}-splash.html\`);
+  const splashPath = path.join(app.getPath('temp'), \`\${APP_NAME}-splash.html\`);
   fs.writeFileSync(splashPath, splashHtml);
 
   splashWindow.loadFile(splashPath);
@@ -423,12 +427,12 @@ function createSplashScreen() {
 function createWindow() {
   logAppInfo();
 
-  app.setAppUserModelId(APP_DOMAIN);
+  app.setAppUserModelId(APP_NAME);
 
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    title: APP_DOMAIN,
+    width: WINDOW_WIDTH,
+    height: WINDOW_HEIGHT,
+    title: APP_NAME,
     icon: APP_ICON_PATH,
     show: false,
     webPreferences: {
@@ -470,7 +474,7 @@ function createWindow() {
   });
 
   mainWindow.webContents.on('did-start-loading', () => {
-    updateSplashScreen('Connecting to ' + APP_DOMAIN + '...');
+    updateSplashScreen('Connecting to ' + APP_NAME + '...');
   });
 
   mainWindow.webContents.on('did-start-navigation', (event, url) => {
@@ -553,7 +557,7 @@ app.on('activate', () => {
 `;
 }
 
-function generatePackageJson(domain, iconPath) {
+function generatePackageJson(appName, iconPath) {
   const u2aPackagePath = path.resolve(__dirname, '../../package.json');
 
   let u2aVersion = '1.0.0';
@@ -566,9 +570,9 @@ function generatePackageJson(domain, iconPath) {
   }
 
   return {
-    name: `u2a-${domain}`,
+    name: `u2a-${appName.replace(/\s+/g, '-')}`,
     version: u2aVersion,
-    description: `Web app for ${domain}`,
+    description: `Web app for ${appName}`,
     main: 'main.js',
     scripts: {
       start: 'electron .'
@@ -577,45 +581,46 @@ function generatePackageJson(domain, iconPath) {
       electron: '^22.0.0'
     },
     build: {
-      appId: `com.u2a.${domain.replace(/\./g, '-')}`,
-      productName: domain,
+      appId: `com.u2a.${appName.replace(/\s+/g, '-')}`,
+      productName: appName,
       icon: iconPath
     }
   };
 }
 
-async function createApp(url) {
+async function createApp(url, options) {
   logger.info(`Creating application for ${url}`);
 
   try {
     url = await normalizeUrl(url);
     const domain = getDomainName(url);
+    const appName = options.name || domain;
 
     const db = readDB();
-    if (db.hasOwnProperty(domain)) {
-      logger.warn(`Application for ${domain} already exists`);
+    if (db.hasOwnProperty(appName)) {
+      logger.warn(`Application for ${appName} already exists`);
       return;
     }
 
     const iconPath = await getFavicon(url);
 
-    const appDir = path.join(APPS_DIR, domain);
+    const appDir = path.join(APPS_DIR, appName);
     if (!fs.existsSync(appDir)) {
       fs.mkdirSync(appDir, { recursive: true });
       logger.debug(`Directory created: ${appDir}`);
     }
 
     const mainJsPath = path.join(appDir, 'main.js');
-    const mainJsContent = generateMainJs(domain, url, iconPath);
+    const mainJsContent = generateMainJs(appName, url, iconPath, options);
     fs.writeFileSync(mainJsPath, mainJsContent);
     logger.debug(`main.js file created`);
 
     const packageJsonPath = path.join(appDir, 'package.json');
-    const packageJsonContent = generatePackageJson(domain, iconPath);
+    const packageJsonContent = generatePackageJson(appName, iconPath);
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJsonContent, null, 2));
     logger.debug(`package.json file created`);
 
-    logger.info(`Installing dependencies for ${domain}`);
+    logger.info(`Installing dependencies for ${appName}`);
 
     const installOptions = {
       cwd: appDir,
@@ -626,17 +631,20 @@ async function createApp(url) {
     const stdout = execSync('npm install --only=prod', installOptions);
     logger.debug(`npm install completed: ${stdout.toString().trim()}`);
 
-    const desktopPath = addAppToOS(domain, url, appDir, iconPath);
+    const desktopPath = addAppToOS(appName, url, appDir, iconPath);
 
     const appData = {
       url,
       created: new Date().toISOString(),
       path: appDir,
       icon: iconPath,
-      desktopPath
+      desktopPath,
+      name: options.name,
+      width: options.width,
+      height: options.height
     };
 
-    db[domain] = appData;
+    db[appName] = appData;
     writeDB(db);
 
     logger.success(`Application successfully created for ${url}`);

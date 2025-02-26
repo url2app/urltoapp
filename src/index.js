@@ -14,10 +14,15 @@ program
   .description('Convert websites into desktop applications')
   .version(version);
 
-program
+  program
   .command('create <url>')
   .description('Create a new application from a URL')
-  .action(createApp);
+  .option('--name <name>', 'Specify the application name')
+  .option('--width <width>', 'Specify the window width', parseInt)
+  .option('--height <height>', 'Specify the window height', parseInt)
+  .action((url, options) => {
+    createApp(url, options);
+  });
 
 program
   .command('list')

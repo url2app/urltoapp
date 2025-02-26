@@ -1,10 +1,10 @@
 <div align="center">
   <a href="#" style="display: block; text-align: center;">
-    <img 
-      alt="Image of this repo" 
-      src="https://togp.xyz?owner=douxxtech&repo=urltoapp&theme=json-dark-all&cache=false" 
-      type="image/svg+xml" 
-      style="border-radius: 20px; overflow: hidden;" 
+    <img
+      alt="Image of this repo"
+      src="https://togp.xyz?owner=douxxtech&repo=urltoapp&theme=json-dark-all&cache=false"
+      type="image/svg+xml"
+      style="border-radius: 20px; overflow: hidden;"
     />
     <h1 align="center">U2A (URL to App)</h1>
   </a>
@@ -25,6 +25,7 @@ U2A is a command-line utility that allows you to transform any web URL into a st
 - 🔄 Automatic favicon retrieval for app icons
 - 📋 Easy management of created applications
 - 📊 Detailed logging for troubleshooting
+- 🏷️ Customizable application names and window sizes
 
 ## Installation
 
@@ -39,17 +40,17 @@ npm install -g u2a
 To create a desktop application from a website:
 
 ```bash
-u2a create <url>
+u2a create <url> [--name <appName>] [--width <width>] [--height <height>]
 ```
 
 Example:
 ```bash
-u2a create github.com
+u2a create github.com --name "GitHub App" --width 1200 --height 800
 ```
 
 This will:
 1. Download the website's favicon (if available)
-2. Create an Electron wrapper application
+2. Create an Electron wrapper application with the specified name and window size
 3. Add the application to your system menu/launcher
 4. Track the application in the U2A database
 
@@ -62,7 +63,7 @@ u2a list
 ```
 
 This will display a list of all created applications with their details:
-- Domain name
+- Application name
 - Original URL
 - Creation date
 - Application directory
@@ -72,12 +73,12 @@ This will display a list of all created applications with their details:
 To remove an application:
 
 ```bash
-u2a remove <url>
+u2a remove <appName>
 ```
 
 Example:
 ```bash
-u2a remove github.com
+u2a remove "GitHub App"
 ```
 
 This will:
@@ -127,7 +128,3 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## Author
 
 Created by [Douxx](https://douxx.tech)
-
-## Disclaimer
-
-This tool is for personal use only. Always respect the terms of service of websites you convert to desktop apps.
