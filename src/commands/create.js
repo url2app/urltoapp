@@ -200,11 +200,13 @@ const APP_URL = "${url}";
 const APP_ICON_PATH = "${iconPath.replace(/\\/g, '\\\\')}";
 
 let mainWindow;
+let splashWindow;
+let loadErrors = [];
 
 function logAppInfo() {
   const packageJsonPath = path.join(__dirname, 'package.json');
   let packageInfo = {};
-  
+
   try {
     const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf-8');
     packageInfo = JSON.parse(packageJsonContent);
@@ -220,25 +222,212 @@ function logAppInfo() {
   console.log(\`Started at: \${new Date().toLocaleString()}\`);
   console.log(\`App directory: \${__dirname}\`);
   console.log(\`Icon path: \${APP_ICON_PATH}\`);
-  
+
   console.log('\\n  PACKAGE INFO:');
   console.log(\`  - Name: \${packageInfo.name || 'N/A'}\`);
   console.log(\`  - Version: \${packageInfo.version || 'N/A'}\`);
   console.log(\`  - Description: \${packageInfo.description || 'N/A'}\`);
   console.log(\`  - Electron version: \${packageInfo.dependencies?.electron || 'N/A'}\`);
-  
+
   if (packageInfo.build) {
     console.log('\\n  BUILD CONFIG:');
     console.log(\`  - App ID: \${packageInfo.build.appId || 'N/A'}\`);
     console.log(\`  - Product Name: \${packageInfo.build.productName || 'N/A'}\`);
   }
-  
+
   console.log('--------------------------------\\n');
+}
+
+function updateSplashScreen(message, isError = false) {
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    const script = \`
+      document.getElementById('loading-text').innerText = "\${message.replace(/"/g, '\\"')}";
+      \${isError ?
+        \`document.getElementById('loading-text').classList.add('error');
+         document.getElementById('errors-container').style.display = 'block';
+         const errorItem = document.createElement('li');
+         errorItem.textContent = "\${message.replace(/"/g, '\\"')}";
+         document.getElementById('errors-list').appendChild(errorItem);\`
+        : ''}
+    \`;
+    splashWindow.webContents.executeJavaScript(script).catch(err => console.error('Failed to update splash screen:', err));
+  }
+}
+
+function createSplashScreen() {
+  splashWindow = new BrowserWindow({
+    width: 550,
+    height: 400,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    icon: APP_ICON_PATH,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  const splashHtml = \`
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Loading...</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-primary, #0f172a);
+        color: var(--text-primary, #f8fafc);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .container {
+        text-align: center;
+        width: 90%;
+        max-width: 500px;
+      }
+
+      .domain {
+        font-size: 24px;
+        margin-bottom: 20px;
+        color: var(--primary, #2563eb);
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(37, 99, 235, 0.2);
+        border-radius: 50%;
+        border-top-color: var(--primary, #2563eb);
+        animation: spin 1s ease-in-out infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .loading-text {
+        font-size: 16px;
+        color: var(--text-secondary, #cbd5e1);
+        margin-top: 15px;
+      }
+
+      .loading-text.error {
+        color: var(--danger, #ef4444);
+        font-weight: bold;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 4px;
+        background-color: var(--bg-secondary, #1e293b);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 15px;
+      }
+
+      .progress {
+        height: 100%;
+        width: 0%;
+        background-color: var(--primary, #2563eb);
+        animation: progress 3s ease-in-out infinite;
+      }
+
+      @keyframes progress {
+        0% { width: 0%; }
+        50% { width: 70%; }
+        100% { width: 100%; }
+      }
+
+      #errors-container {
+        display: none;
+        margin-top: 20px;
+        background-color: rgba(239, 68, 68, 0.1);
+        border-left: 3px solid var(--danger, #ef4444);
+        padding: 10px;
+        border-radius: 4px;
+        text-align: left;
+        max-height: 150px;
+        overflow-y: auto;
+        width: 100%;
+      }
+
+      #errors-list {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--danger, #ef4444);
+        font-size: 14px;
+      }
+
+      #errors-list li {
+        margin-bottom: 5px;
+      }
+
+      .retry-button {
+        background-color: var(--primary, #2563eb);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        margin-top: 15px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s;
+        display: none;
+      }
+
+      .retry-button:hover {
+        background-color: var(--primary-dark, #1d4ed8);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="domain">\${APP_DOMAIN}</div>
+      <div class="spinner"></div>
+      <div id="loading-text" class="loading-text">Loading...</div>
+      <div class="progress-bar">
+        <div class="progress"></div>
+      </div>
+      <div id="errors-container">
+        <h3 style="margin-top: 0; color: var(--danger, #ef4444);">Errors detected:</h3>
+        <ul id="errors-list"></ul>
+      </div>
+      <button id="retry-button" class="retry-button" onclick="window.location.reload()">Retry</button>
+    </div>
+    <script>
+      window.showRetryButton = function() {
+        document.getElementById('retry-button').style.display = 'inline-block';
+        document.querySelector('.spinner').style.animationPlayState = 'paused';
+        document.querySelector('.progress').style.animationPlayState = 'paused';
+      }
+    </script>
+  </body>
+  </html>
+  \`;
+
+  const splashPath = path.join(app.getPath('temp'), \`\${APP_DOMAIN}-splash.html\`);
+  fs.writeFileSync(splashPath, splashHtml);
+
+  splashWindow.loadFile(splashPath);
+  splashWindow.center();
 }
 
 function createWindow() {
   logAppInfo();
-  
+
   app.setAppUserModelId(APP_DOMAIN);
 
   mainWindow = new BrowserWindow({
@@ -246,10 +435,72 @@ function createWindow() {
     height: 800,
     title: APP_DOMAIN,
     icon: APP_ICON_PATH,
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true
     }
+  });
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    const errorMessage = \`Load error (\${errorCode}): \${errorDescription}\`;
+    console.error(errorMessage);
+    loadErrors.push(errorMessage);
+
+    updateSplashScreen(errorMessage, true);
+
+    if (isMainFrame) {
+      splashWindow.webContents.executeJavaScript('window.showRetryButton()').catch(err => {
+        console.error('Failed to show retry button:', err);
+      });
+    }
+  });
+
+  mainWindow.webContents.on('certificate-error', (event, url, error, certificate, callback) => {
+    event.preventDefault();
+    const errorMessage = \`Certificate error: \${error}\`;
+    console.error(errorMessage);
+    loadErrors.push(errorMessage);
+
+    updateSplashScreen(errorMessage, true);
+    callback(false);
+  });
+
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    if (level === 2) {
+      const errorMessage = \`Console: \${message} (line \${line})\`;
+      console.error(errorMessage);
+      loadErrors.push(errorMessage);
+
+      updateSplashScreen('JavaScript error detected', true);
+    }
+  });
+
+  mainWindow.webContents.on('did-start-loading', () => {
+    updateSplashScreen('Connecting to ' + APP_DOMAIN + '...');
+  });
+
+  mainWindow.webContents.on('did-start-navigation', (event, url) => {
+    updateSplashScreen('Navigating to ' + new URL(url).host + '...');
+  });
+
+  mainWindow.webContents.on('dom-ready', () => {
+    updateSplashScreen('DOM ready, loading resources...');
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    updateSplashScreen('Loading complete!');
+
+    setTimeout(() => {
+      if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.close();
+      }
+
+      if (!mainWindow.isVisible()) {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    }, 500);
   });
 
   mainWindow.loadURL(APP_URL);
@@ -272,13 +523,28 @@ function createWindow() {
 
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
+
+  setTimeout(() => {
+    if (splashWindow && !splashWindow.isDestroyed()) {
+      if (loadErrors.length === 0) {
+        splashWindow.close();
+        if (!mainWindow.isVisible()) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    }
+  }, 15000);
 }
 
 if (process.platform === 'win32') {
   app.setAppUserModelId(app.name);
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createSplashScreen();
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -293,6 +559,7 @@ app.on('activate', () => {
 });
 `;
 }
+
 
 
 function generatePackageJson(domain, iconPath) {
