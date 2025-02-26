@@ -51,7 +51,6 @@ function createWindowsShortcut(appInfo) {
   }
 }
 
-
 function createLinuxDesktopEntry(appInfo) {
   try {
     const { domain, url, appDir, iconPath } = appInfo;
@@ -179,9 +178,7 @@ function removeAppFromOS(domain) {
       const desktopFilePath = path.join(os.homedir(), '.local', 'share', 'applications', `u2a-${domain}.desktop`);
       if (fs.existsSync(desktopFilePath)) {
         fs.unlinkSync(desktopFilePath);
-        logger.success(`Linux desktop entry removed: ${desktopFilePath}
-
-`);
+        logger.success(`Linux desktop entry removed: ${desktopFilePath}`);
       }
     }
   } catch (error) {
@@ -240,17 +237,14 @@ function logAppInfo() {
 
 function updateSplashScreen(message, isError = false) {
   if (splashWindow && !splashWindow.isDestroyed()) {
-    const script = \`
-      document.getElementById('loading-text').innerText = "\${message.replace(/"/g, '\\"')}";
-      \${isError ?
-        \`document.getElementById('loading-text').classList.add('error');
-         document.getElementById('errors-container').style.display = 'block';
-         const errorItem = document.createElement('li');
-         errorItem.textContent = "\${message.replace(/"/g, '\\"')}";
-         document.getElementById('errors-list').appendChild(errorItem);\`
-        : ''}
-    \`;
-    splashWindow.webContents.executeJavaScript(script).catch(err => console.error('Failed to update splash screen:', err));
+    splashWindow.webContents.executeJavaScript(\`
+  try {
+    document.getElementById('loading-text').innerText = "\${message.replace(/"/g, '\\"')}";
+  } catch (e) {
+    console.error('Failed to update splash screen:', e);
+  }
+\`).catch(err => console.error('Failed to update splash screen:', err));
+
   }
 }
 
@@ -273,6 +267,7 @@ function createSplashScreen() {
   <html>
   <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none';">
     <title>Loading...</title>
     <style>
       body {
@@ -444,7 +439,6 @@ function createWindow() {
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
     const errorMessage = \`Load error (\${errorCode}): \${errorDescription}\`;
-    console.error(errorMessage);
     loadErrors.push(errorMessage);
 
     updateSplashScreen(errorMessage, true);
@@ -469,7 +463,6 @@ function createWindow() {
   mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
     if (level === 2) {
       const errorMessage = \`Console: \${message} (line \${line})\`;
-      console.error(errorMessage);
       loadErrors.push(errorMessage);
 
       updateSplashScreen('JavaScript error detected', true);
@@ -560,11 +553,9 @@ app.on('activate', () => {
 `;
 }
 
-
-
 function generatePackageJson(domain, iconPath) {
   const u2aPackagePath = path.resolve(__dirname, '../../package.json');
-  
+
   let u2aVersion = '1.0.0';
   try {
     const u2aPackageContent = fs.readFileSync(u2aPackagePath, 'utf8');
@@ -573,7 +564,7 @@ function generatePackageJson(domain, iconPath) {
   } catch (error) {
     logger.error('Error while fetching u2a package.json', error)
   }
-  
+
   return {
     name: `u2a-${domain}`,
     version: u2aVersion,
