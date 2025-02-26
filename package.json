@@ -1,6 +1,6 @@
 {
     "name": "u2a",
-    "version": "2.1.6",
+    "version": "2.1.8",
     "description": "URL to App - Turn any URL into a desktop application",
     "main": "src/index.js",
     "bin": {
