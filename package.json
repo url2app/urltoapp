@@ -1,39 +1,42 @@
 {
     "name": "u2a",
-    "version": "2.1.8",
+    "version": "3.0.0",
     "description": "URL to App - Turn any URL into a desktop application",
     "main": "src/index.js",
     "bin": {
-      "u2a": "./src/index.js"
+        "u2a": "./src/index.js"
     },
     "scripts": {
-      "start": "node src/index.js"
+        "start": "node src/index.js"
     },
     "keywords": [
-      "cli",
-      "webapp",
-      "electron",
-      "url",
-      "desktop",
-      "build",
-      "application"
+        "cli",
+        "webapp",
+        "electron",
+        "url",
+        "desktop",
+        "build",
+        "application"
     ],
     "author": "Douxx",
     "license": "GPL-3.0-only",
     "dependencies": {
-      "axios": "^1.6.0",
-      "chalk": "^4.1.2",
-      "commander": "^10.0.0",
-      "electron": "^22.0.0",
-      "inquirer": "^8.2.5",
-      "open": "^8.4.0"
+        "axios": "^1.6.0",
+        "chalk": "^4.1.2",
+        "commander": "^10.0.0",
+        "electron": "^22.0.0",
+        "icojs": "^0.19.5",
+        "inquirer": "^8.2.5",
+        "open": "^8.4.0",
+        "png-to-ico": "^2.1.8",
+        "sharp": "^0.33.5"
     },
     "homepage": "https://urltoapp.xyz",
     "repository": {
-    "type": "git",
-    "url": "https://github.com/douxxtech/urltoapp"
-  },
-  "bugs": {
-    "url": "https://github.com/douxxtech/urltoapp/issues"
-  }
-  }
+        "type": "git",
+        "url": "https://github.com/douxxtech/urltoapp"
+    },
+    "bugs": {
+        "url": "https://github.com/douxxtech/urltoapp/issues"
+    }
+}

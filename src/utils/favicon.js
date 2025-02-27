@@ -4,6 +4,10 @@ const axios = require('axios');
 const { APPS_DIR } = require('./config');
 const { normalizeUrl, getDomainName } = require('./url');
 const Logger = require('./logger');
+const { parseICO} = require('icojs');
+const sharp = require('sharp');
+const pngToIco = require('png-to-ico');
+
 
 const logger = new Logger('favicon');
 
@@ -19,7 +23,7 @@ async function getFavicon(url) {
     const iconResponse = await axios.get(faviconUrl, { responseType: 'arraybuffer' });
 
     const contentType = iconResponse.headers['content-type'];
-    let fileExtension = '.ico'; // Default extension
+    let fileExtension = '.ico';
     if (contentType.includes('png')) {
       fileExtension = '.png';
     } else if (contentType.includes('jpeg') || contentType.includes('jpg')) {
@@ -44,6 +48,51 @@ async function getFavicon(url) {
   }
 }
 
+async function processFavicon(iconPath) {
+  const dir = path.dirname(iconPath);
+  const ext = path.extname(iconPath);
+  const baseName = path.basename(iconPath, ext);
+
+  if (baseName === 'favicon' && ext === '.ico') {
+    const newPath = path.join(dir, 'favicon256.ico');
+    fs.copyFileSync(iconPath, newPath);
+    logger.debug("Default favicon.ico updated to favicon256.ico");
+    return newPath;
+  } else {
+    try {
+      const icoBuffer = fs.readFileSync(iconPath);
+      const images = await parseICO(icoBuffer, 'image/png');
+
+      if (images && images.length > 0) {
+        const pngBuffer = Buffer.from(images[0].buffer);
+        const tempPngPath = iconPath + '.png';
+        const resizedPngPath = iconPath + '_resized.png';
+
+        fs.writeFileSync(tempPngPath, pngBuffer);
+
+        await sharp(tempPngPath)
+          .resize(256, 256)
+          .toFile(resizedPngPath);
+
+        fs.renameSync(resizedPngPath, tempPngPath);
+
+        const newIcoBuffer = await pngToIco([tempPngPath]);
+        fs.writeFileSync(iconPath, newIcoBuffer);
+        fs.unlinkSync(tempPngPath);
+
+        logger.warn(`To proceed to setup, favicon has been resized to 256x256. Quality loss is possible.`);
+        return iconPath;
+      }
+    } catch (error) {
+      logger.error('Error processing ICO file:', error);
+      return iconPath;
+    }
+  }
+}
+
+
+
 module.exports = {
-  getFavicon
+  getFavicon,
+  processFavicon
 };

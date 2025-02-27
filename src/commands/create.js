@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { normalizeUrl, getDomainName } = require('../utils/url');
-const { getFavicon } = require('../utils/favicon');
+const { getFavicon, processFavicon } = require('../utils/favicon');
 const { APPS_DIR, readDB, writeDB } = require('../utils/config');
 const Logger = require('../utils/logger');
 const os = require('os');
@@ -557,7 +557,10 @@ app.on('activate', () => {
 `;
 }
 
-function generatePackageJson(appName, iconPath) {
+
+
+
+async function generatePackageJson(appName, iconPath, isExecutable = false, createSetup = false) {
   const u2aPackagePath = path.resolve(__dirname, '../../package.json');
 
   let u2aVersion = '1.0.0';
@@ -566,14 +569,19 @@ function generatePackageJson(appName, iconPath) {
     const u2aPackage = JSON.parse(u2aPackageContent);
     u2aVersion = u2aPackage.version || u2aVersion;
   } catch (error) {
-    logger.error('Error while fetching u2a package.json', error)
+    logger.error('Error while fetching u2a package.json', error);
   }
 
-  return {
+  if (createSetup) {
+    iconPath = await processFavicon(iconPath);
+  }
+
+  const packageJson = {
     name: `u2a-${appName.replace(/\s+/g, '-')}`,
     version: u2aVersion,
     description: `Web app for ${appName}`,
     main: 'main.js',
+    author: `${appName}`,
     scripts: {
       start: 'electron .'
     },
@@ -586,6 +594,201 @@ function generatePackageJson(appName, iconPath) {
       icon: iconPath
     }
   };
+
+  if (isExecutable) {
+    packageJson.devDependencies = {
+      "electron-packager": "^17.1.1",
+      "electron-builder": "^24.6.3",
+      "electron": "^22.0.0"
+    };
+
+    packageJson.dependencies = {};
+    
+    packageJson.scripts.package = "electron-packager . --overwrite --asar";
+    packageJson.scripts.setup = "electron-builder";
+  }
+
+  if (isExecutable && createSetup) {
+    packageJson.build = {
+      ...packageJson.build,
+      appId: `com.u2a.${appName.replace(/\s+/g, '-')}`,
+      productName: appName,
+      directories: {
+        output: "installer"
+      },
+      files: [
+        "**/*",
+        "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+        "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+        "!**/node_modules/*.d.ts",
+        "!**/node_modules/.bin",
+        "!**/.{idea,git,cache,build,dist}",
+        "!dist/**/*",
+        "!installer/**/*"
+      ],
+      win: {
+        target: "nsis",
+        icon: iconPath
+      },
+      mac: {
+        target: "dmg"
+      },
+      linux: {
+        target: "AppImage",
+        icon: iconPath
+      },
+      nsis: {
+        oneClick: false,
+        allowToChangeInstallationDirectory: true
+      }
+    };
+  }
+
+  return packageJson;
+}
+
+function copyFolderRecursiveSync(source, target) {
+  if (!fs.existsSync(target)) {
+    fs.mkdirSync(target, { recursive: true });
+  }
+
+  const files = fs.readdirSync(source);
+
+  files.forEach((file) => {
+    const sourcePath = path.join(source, file);
+    const targetPath = path.join(target, file);
+
+    if (fs.lstatSync(sourcePath).isDirectory()) {
+      copyFolderRecursiveSync(sourcePath, targetPath);
+    } else {
+      fs.copyFileSync(sourcePath, targetPath);
+    }
+  });
+}
+
+async function buildExecutable(appDir, appName, platform, iconPath, options) {
+  logger.info(`Building executable for ${platform}...`);
+  
+  try {
+    const installOptions = {
+      cwd: appDir,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true
+    };
+    
+    execSync('npm install --save-dev electron-packager electron', installOptions);
+    
+    let platformFlag = '';
+    let archFlag = `--arch=${options.arch || 'x64'}`;
+    let iconOption = '';
+    
+    switch(platform) {
+      case 'windows':
+        platformFlag = '--platform=win32';
+        iconOption = iconPath ? `--icon="${iconPath}"` : '';
+        break;
+      case 'darwin':
+        platformFlag = '--platform=darwin';
+        if (iconPath && !iconPath.endsWith('.icns')) {
+          logger.warn('MacOs Icons are not supported at this time.');
+        }
+        iconOption = iconPath ? `--icon="${iconPath}"` : '';
+        break;
+      case 'linux':
+        platformFlag = '--platform=linux';
+        iconOption = iconPath ? `--icon="${iconPath}"` : '';
+        break;
+      default:
+        platformFlag = `--platform=${process.platform}`;
+    }
+    
+    const packageCommand = `npx electron-packager . "${appName}" ${platformFlag} ${archFlag} --out=dist --overwrite --asar ${iconOption}`;
+    
+    logger.debug(`Executing: ${packageCommand}`);
+    
+    execSync(packageCommand, installOptions);
+    
+    let distPlatform = '';
+    switch(platform) {
+      case 'windows': distPlatform = 'win32'; break;
+      case 'darwin': distPlatform = 'darwin'; break;
+      case 'linux': distPlatform = 'linux'; break;
+      default: distPlatform = process.platform;
+    }
+    
+    const outputPath = path.join(appDir, 'dist', `${appName}-${distPlatform}-x64`);
+    
+    if (fs.existsSync(outputPath)) {
+      logger.debug(`Executable built successfully at: ${outputPath}`);
+      return outputPath;
+    } else {
+      logger.error(`Failed to find the built executable at: ${outputPath}`);
+      return null;
+    }
+  } catch (error) {
+    logger.error(`Error while building executable:`, error);
+    return null;
+  }
+}
+
+function remove(path) {
+  try {
+    if (fs.existsSync(path)) {
+      fs.rmSync(path, { recursive: true, force: true });
+      logger.debug(`Dir/file removed: ${path}`);
+    }
+  } catch (error) {
+    logger.error(`Error while removing dir/file ${path}`, error);
+  }
+}
+
+async function buildSetup(appDir, platform, arch) {
+  logger.info(`Building setup for ${platform}${arch ? ` (${arch})` : ''}...`);
+  
+  try {
+    const installOptions = {
+      cwd: appDir,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true
+    };
+    
+    execSync('npm install --save-dev electron-builder', installOptions);
+    
+    let builderArgs = '';
+    switch(platform) {
+      case 'windows':
+        builderArgs = '--win';
+        break;
+      case 'darwin':
+        builderArgs = '--mac';
+        break;
+      case 'linux':
+        builderArgs = '--linux';
+        break;
+      default:
+        builderArgs = '';
+    }
+    
+    if (arch) {
+      builderArgs += ` --${arch}`;
+    }
+    
+    const builderCommand = `npx electron-builder ${builderArgs}`;
+    logger.debug(`Executing: ${builderCommand}`);
+    execSync(builderCommand, installOptions);
+    
+    const installerPath = path.join(appDir, 'installer');
+    if (fs.existsSync(installerPath)) {
+      logger.debug(`Setup created at: ${installerPath}`);
+      return installerPath;
+    } else {
+      logger.error(`Failed to find the built installer at: ${installerPath}`);
+      return null;
+    }
+  } catch (error) {
+    logger.error(`Error while building setup:`, error);
+    return null;
+  }
 }
 
 async function createApp(url, options) {
@@ -615,8 +818,10 @@ async function createApp(url, options) {
     fs.writeFileSync(mainJsPath, mainJsContent);
     logger.debug(`main.js file created`);
 
+    const isExecutable = !!options.executable;
+    const createSetup = !!options.setup;
     const packageJsonPath = path.join(appDir, 'package.json');
-    const packageJsonContent = generatePackageJson(appName, iconPath);
+    const packageJsonContent = await generatePackageJson(appName, iconPath, isExecutable, createSetup);
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJsonContent, null, 2));
     logger.debug(`package.json file created`);
 
@@ -628,10 +833,59 @@ async function createApp(url, options) {
       windowsHide: true
     };
 
-    const stdout = execSync('npm install --only=prod', installOptions);
-    logger.debug(`npm install completed: ${stdout.toString().trim()}`);
+    execSync('npm install --only=prod', installOptions);
+    logger.debug(`npm install completed`);
 
-    const desktopPath = addAppToOS(appName, url, appDir, iconPath);
+    let executablePath = null;
+    let desktopPath = null;
+
+    if (isExecutable) {
+      const targetPlatform = options.executable === true ? process.platform : options.executable;
+      executablePath = await buildExecutable(appDir, appName, targetPlatform, iconPath, options);
+
+      if (options.setup) {
+        const setupPath = await buildSetup(appDir, targetPlatform, options.arch);
+        if (setupPath) {
+          logger.debug(`Setup installer created at: ${setupPath}`);
+          
+          const currentDir = process.cwd();
+          const setupTargetDir = path.join(currentDir, `${appName}-setup`);
+          
+          if (!fs.existsSync(setupTargetDir)) {
+            fs.mkdirSync(setupTargetDir, { recursive: true });
+          }
+          
+          copyFolderRecursiveSync(setupPath, setupTargetDir);
+          logger.success(`Setup installer created at: ${setupTargetDir}`);
+        }
+      }
+      
+      if (executablePath) {
+        logger.debug(`Executable created at: ${executablePath}`);
+        
+        const currentDir = process.cwd();
+        const targetDir = path.join(currentDir, `${appName}-executable`);
+        
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+        
+        copyFolderRecursiveSync(executablePath, targetDir);
+        
+        logger.success(`Executable created at: ${targetDir}`);
+        
+        executablePath = targetDir;
+        
+        removeAppFromOS(appName);
+        remove(appDir);
+        remove(iconPath);
+        
+        logger.debug(`Temporary application files removed after executable creation`);
+        return;
+      }
+    } else {
+      desktopPath = addAppToOS(appName, url, appDir, iconPath);
+    }
 
     const appData = {
       url,
@@ -639,6 +893,7 @@ async function createApp(url, options) {
       path: appDir,
       icon: iconPath,
       desktopPath,
+      executablePath,
       name: options.name,
       width: options.width,
       height: options.height
@@ -651,8 +906,11 @@ async function createApp(url, options) {
     if (desktopPath) {
       logger.info(`A shortcut has been created in your system's applications directory`);
     }
+    if (executablePath) {
+      logger.info(`A standalone executable has been created at: ${executablePath}`);
+    }
   } catch (error) {
-    logger.error(`Error while creating an application for ${url}`, error);
+    logger.error(`Error while creating an application for ${url}: ${error}`);
   }
 }
 

@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="#" style="display: block; text-align: center;">
+  <a href="https://urltoapp.xyz" style="display: block; text-align: center;">
     <img
       alt="Image of this repo"
       src="https://togp.xyz?owner=douxxtech&repo=urltoapp&theme=json-dark-all&cache=false"
@@ -86,8 +86,37 @@ This will:
 2. Delete the application files
 3. Remove the entry from the U2A database
 
-## How It Works
 
+### Creating an executable
+
+To directly create a windows, macos or linux executable, you can use the `--executable [windows|darwin|linux] [--arch <architecture>]` argument with the create command.
+
+This will:
+1. Temporarily install the application
+2. Create an executable and move it to your working directory
+3. Delete the application
+
+> [!WARNING]
+> To launch an executable, you will need all the files that are created by U2A.
+
+### Creating a setup
+
+You can also directly create a setup file, so people can install it on their machine. Use the `--executable [...] --setup` to do so.
+
+This will:
+1. Temporarily install the application
+2. Create an executable and move it to your working directory
+3. Create a setup file and move it to your working directory
+4. Delete the application
+
+
+> [!WARNING]
+> To use the setup, you will need all the files that are created by U2A.
+
+
+## How It Works
+  
+`This dont apply for executables and setup`
 U2A creates a minimal Electron application that loads the specified website URL. It:
 
 1. Downloads the site's favicon to use as the application icon

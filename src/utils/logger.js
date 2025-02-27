@@ -41,7 +41,7 @@ class Logger {
   }
 
   error(message, error = null) {
-    const formattedMessage = this._format('ERROR', message);
+    const formattedMessage = this._format('ERROR', `${message} ${error}`);
     console.log(chalk.red(formattedMessage));
     this._writeToFile(formattedMessage);
     
