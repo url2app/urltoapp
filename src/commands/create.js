@@ -755,7 +755,7 @@ async function createApp(url, options) {
         
         removeAppFromOS(appName);
         remove(appDir);
-        if (path.basename(iconPath) !== "favicon") {
+        if (path.basename(iconPath) !== "favicon.ico") {
           remove(iconPath);
         }
         
