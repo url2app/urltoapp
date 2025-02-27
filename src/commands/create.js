@@ -190,7 +190,7 @@ function generateMainJs(appName, url, iconPath, options = {}) {
   const height = options.height || 800;
 
   return `
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, nativeTheme } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -202,7 +202,6 @@ const WINDOW_HEIGHT = ${height};
 
 let mainWindow;
 let splashWindow;
-let loadErrors = [];
 
 function logAppInfo() {
   const packageJsonPath = path.join(__dirname, 'package.json');
@@ -239,26 +238,15 @@ function logAppInfo() {
   console.log('--------------------------------\\n');
 }
 
-function updateSplashScreen(message, isError = false) {
-  if (splashWindow && !splashWindow.isDestroyed()) {
-    splashWindow.webContents.executeJavaScript(\`
-  try {
-    document.getElementById('loading-text').innerText = "\${message.replace(/"/g, '\\"')}";
-  } catch (e) {
-    console.error('Failed to update splash screen:', e);
-  }
-\`).catch(err => console.error('Failed to update splash screen:', err));
-
-  }
-}
-
 function createSplashScreen() {
   splashWindow = new BrowserWindow({
-    width: 550,
-    height: 400,
+    width: 200,
+    height: 40,
     transparent: true,
     frame: false,
     alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
     icon: APP_ICON_PATH,
     webPreferences: {
       nodeIntegration: false,
@@ -266,153 +254,85 @@ function createSplashScreen() {
     }
   });
 
+  const isDarkMode = nativeTheme.shouldUseDarkColors;
+  const bgColor = isDarkMode ? '#333333' : '#f5f5f5';
+  const loaderBgColor = isDarkMode ? '#555555' : '#e0e0e0';
+  const loaderColor = isDarkMode ? '#ffffff' : '#2563eb';
+  const shadowColor = isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.2)';
+  
   const splashHtml = \`
   <!DOCTYPE html>
   <html>
   <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none';">
-    <title>Loading...</title>
+    <title>Loading</title>
     <style>
-      body {
+      html, body {
         margin: 0;
         padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background-color: var(--bg-primary, #0f172a);
-        color: var(--text-primary, #f8fafc);
-        height: 100vh;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: transparent;
+      }
+      
+      .container {
+        width: 100%;
+        height: 100%;
         display: flex;
-        flex-direction: column;
         justify-content: center;
         align-items: center;
+      }
+      
+      .loader-container {
+        width: 180px;
+        height: 12px;
+        background-color: \${bgColor};
+        border-radius: 6px;
         overflow: hidden;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 8px \${shadowColor};
+        padding: 3px;
       }
-
-      .container {
-        text-align: center;
-        width: 90%;
-        max-width: 500px;
-      }
-
-      .domain {
-        font-size: 24px;
-        margin-bottom: 20px;
-        color: var(--primary, #2563eb);
-      }
-
-      .spinner {
-        width: 50px;
-        height: 50px;
-        border: 5px solid rgba(37, 99, 235, 0.2);
-        border-radius: 50%;
-        border-top-color: var(--primary, #2563eb);
-        animation: spin 1s ease-in-out infinite;
-        margin: 0 auto 20px;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      .loading-text {
-        font-size: 16px;
-        color: var(--text-secondary, #cbd5e1);
-        margin-top: 15px;
-      }
-
-      .loading-text.error {
-        color: var(--danger, #ef4444);
-        font-weight: bold;
-      }
-
-      .progress-bar {
+      
+      .loader-bg {
         width: 100%;
-        height: 4px;
-        background-color: var(--bg-secondary, #1e293b);
-        border-radius: 2px;
-        overflow: hidden;
-        margin-top: 15px;
-      }
-
-      .progress {
         height: 100%;
-        width: 0%;
-        background-color: var(--primary, #2563eb);
-        animation: progress 3s ease-in-out infinite;
-      }
-
-      @keyframes progress {
-        0% { width: 0%; }
-        50% { width: 70%; }
-        100% { width: 100%; }
-      }
-
-      #errors-container {
-        display: none;
-        margin-top: 20px;
-        background-color: rgba(239, 68, 68, 0.1);
-        border-left: 3px solid var(--danger, #ef4444);
-        padding: 10px;
+        background-color: \${loaderBgColor};
         border-radius: 4px;
-        text-align: left;
-        max-height: 150px;
-        overflow-y: auto;
-        width: 100%;
+        overflow: hidden;
+        position: relative;
       }
-
-      #errors-list {
-        margin: 0;
-        padding-left: 20px;
-        color: var(--danger, #ef4444);
-        font-size: 14px;
-      }
-
-      #errors-list li {
-        margin-bottom: 5px;
-      }
-
-      .retry-button {
-        background-color: var(--primary, #2563eb);
-        color: white;
-        border: none;
-        padding: 8px 16px;
+      
+      .loader {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 30%;
+        background-color: \${loaderColor};
         border-radius: 4px;
-        margin-top: 15px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background-color 0.2s;
-        display: none;
+        animation: loading 1.5s infinite ease-in-out;
       }
-
-      .retry-button:hover {
-        background-color: var(--primary-dark, #1d4ed8);
+      
+      @keyframes loading {
+        0% {
+          left: -30%;
+        }
+        100% {
+          left: 100%;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="domain">\${APP_NAME}</div>
-      <div class="spinner"></div>
-      <div id="loading-text" class="loading-text">Loading...</div>
-      <div class="progress-bar">
-        <div class="progress"></div>
+      <div class="loader-container">
+        <div class="loader-bg">
+          <div class="loader"></div>
+        </div>
       </div>
-      <div id="errors-container">
-        <h3 style="margin-top: 0; color: var(--danger, #ef4444);">Errors detected:</h3>
-        <ul id="errors-list"></ul>
-      </div>
-      <button id="retry-button" class="retry-button" onclick="window.location.reload()">Retry</button>
     </div>
-    <script>
-      window.showRetryButton = function() {
-        document.getElementById('retry-button').style.display = 'inline-block';
-        document.querySelector('.spinner').style.animationPlayState = 'paused';
-        document.querySelector('.progress').style.animationPlayState = 'paused';
-      }
-    </script>
   </body>
   </html>
   \`;
@@ -421,7 +341,15 @@ function createSplashScreen() {
   fs.writeFileSync(splashPath, splashHtml);
 
   splashWindow.loadFile(splashPath);
-  splashWindow.center();
+  
+  const { screen } = require('electron');
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+  
+  splashWindow.setPosition(
+    Math.floor(width / 2 - 100),
+    Math.floor(height / 2 - 20)
+  );
 }
 
 function createWindow() {
@@ -441,53 +369,7 @@ function createWindow() {
     }
   });
 
-  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
-    const errorMessage = \`Load error (\${errorCode}): \${errorDescription}\`;
-    loadErrors.push(errorMessage);
-
-    updateSplashScreen(errorMessage, true);
-
-    if (isMainFrame) {
-      splashWindow.webContents.executeJavaScript('window.showRetryButton()').catch(err => {
-        console.error('Failed to show retry button:', err);
-      });
-    }
-  });
-
-  mainWindow.webContents.on('certificate-error', (event, url, error, certificate, callback) => {
-    event.preventDefault();
-    const errorMessage = \`Certificate error: \${error}\`;
-    console.error(errorMessage);
-    loadErrors.push(errorMessage);
-
-    updateSplashScreen(errorMessage, true);
-    callback(false);
-  });
-
-  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-    if (level === 2) {
-      const errorMessage = \`Console: \${message} (line \${line})\`;
-      loadErrors.push(errorMessage);
-
-      updateSplashScreen('JavaScript error detected', true);
-    }
-  });
-
-  mainWindow.webContents.on('did-start-loading', () => {
-    updateSplashScreen('Connecting to ' + APP_NAME + '...');
-  });
-
-  mainWindow.webContents.on('did-start-navigation', (event, url) => {
-    updateSplashScreen('Navigating to ' + new URL(url).host + '...');
-  });
-
-  mainWindow.webContents.on('dom-ready', () => {
-    updateSplashScreen('DOM ready, loading resources...');
-  });
-
   mainWindow.webContents.on('did-finish-load', () => {
-    updateSplashScreen('Loading complete!');
-
     setTimeout(() => {
       if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.close();
@@ -523,15 +405,13 @@ function createWindow() {
 
   setTimeout(() => {
     if (splashWindow && !splashWindow.isDestroyed()) {
-      if (loadErrors.length === 0) {
-        splashWindow.close();
-        if (!mainWindow.isVisible()) {
-          mainWindow.show();
-          mainWindow.focus();
-        }
+      splashWindow.close();
+      if (!mainWindow.isVisible()) {
+        mainWindow.show();
+        mainWindow.focus();
       }
     }
-  }, 15000);
+  }, 10000);
 }
 
 if (process.platform === 'win32') {
@@ -556,9 +436,6 @@ app.on('activate', () => {
 });
 `;
 }
-
-
-
 
 async function generatePackageJson(appName, iconPath, isExecutable = false, createSetup = false) {
   const u2aPackagePath = path.resolve(__dirname, '../../package.json');
