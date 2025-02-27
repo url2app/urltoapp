@@ -34,9 +34,9 @@
     "homepage": "https://urltoapp.xyz",
     "repository": {
         "type": "git",
-        "url": "https://github.com/douxxtech/urltoapp"
+        "url": "https://github.com/url2app/urltoapp"
     },
     "bugs": {
-        "url": "https://github.com/douxxtech/urltoapp/issues"
+        "url": "https://github.com/url2app/urltoapp/issues"
     }
 }
