@@ -87,9 +87,21 @@ This will:
 3. Remove the entry from the U2A database
 
 
+## Executables && Setups
+
+U2A also supports the creation of executables files and setup files. We will see how to it here.
+
+> [!NOTE]
+> Windows executables and setups are confirmed working, macos and linux ones may be unstable.
+
+
 ### Creating an executable
 
-To directly create a windows, macos or linux executable, you can use the `--executable [windows|darwin|linux] [--arch <architecture>]` argument with the create command.
+To directly create a windows, macos or linux executable, you can use the following command:
+
+```bash
+u2a create <url> [...] --executable [windows|darwin|linux] [--arch <architecture>]
+```
 
 This will:
 1. Temporarily install the application
@@ -101,7 +113,7 @@ This will:
 
 ### Creating a setup
 
-You can also directly create a setup file, so people can install it on their machine. Use the `--executable [...] --setup` to do so.
+You can also directly create a setup file, so people can install it on their machine. Use the `--executable [...] --setup` argument to do so.
 
 This will:
 1. Temporarily install the application

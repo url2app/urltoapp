@@ -55,8 +55,7 @@ async function processFavicon(iconPath) {
 
   if (baseName === 'favicon' && ext === '.ico') {
     const newPath = path.join(dir, 'favicon256.ico');
-    fs.copyFileSync(iconPath, newPath);
-    logger.debug("Default favicon.ico updated to favicon256.ico");
+    logger.debug("Default favicon.ico path updated to favicon256.ico");
     return newPath;
   } else {
     try {
