@@ -878,7 +878,9 @@ async function createApp(url, options) {
         
         removeAppFromOS(appName);
         remove(appDir);
-        remove(iconPath);
+        if (path.basename(iconPath) !== "favicon") {
+          remove(iconPath);
+        }
         
         logger.debug(`Temporary application files removed after executable creation`);
         return;
