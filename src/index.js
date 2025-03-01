@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-ver = process.version.node;
+ver = process.versions.node;
 
 if (ver < '22.0.0') {
   console.error("You need a nodejs installation equal or superior to 22.0.0. Please upgrade your node installation and retry.");
