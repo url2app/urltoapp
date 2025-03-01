@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-const Logger = require('utils/logger');
-const logger = new Logger('create');
-
-
 ver = process.version.node;
 
 if (ver < '22.0.0') {
-  logger.error("You need a nodejs installation equal or superior to 22.0.0. Please upgrade your node installation and retry.")
+  console.error("You need a nodejs installation equal or superior to 22.0.0. Please upgrade your node installation and retry.");
+  process.exit(1);
 }
 
 
