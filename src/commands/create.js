@@ -1,12 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 const { normalizeUrl, getDomainName } = require('../utils/url');
 const { getFavicon, processFavicon } = require('../utils/favicon');
 const { APPS_DIR, readDB, writeDB } = require('../utils/config');
 const Logger = require('../utils/logger');
 const os = require('os');
 const { sanitizeInput } = require('../utils/sanitize');
+const { secureExec } = require('../utils/securexec');
 
 const logger = new Logger('create');
 
@@ -38,7 +38,7 @@ function createWindowsShortcut(appInfo) {
     const tempScriptPath = path.join(os.tmpdir(), `create_shortcut_${appName}.ps1`);
     fs.writeFileSync(tempScriptPath, psScript);
 
-    execSync(`powershell -ExecutionPolicy Bypass -File "${tempScriptPath}"`, {
+    secureExec(`powershell -ExecutionPolicy Bypass -File "${tempScriptPath}"`, {
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true
     });
@@ -555,7 +555,7 @@ async function buildExecutable(appDir, appName, platform, iconPath, options) {
       windowsHide: true
     };
     
-    execSync('npm install --save-dev electron-packager electron', installOptions);
+    secureExec('npm install --save-dev electron-packager electron', installOptions);
     
     let platformFlag = '';
     let archFlag = `--arch=${options.arch || 'x64'}`;
@@ -585,7 +585,7 @@ async function buildExecutable(appDir, appName, platform, iconPath, options) {
     
     logger.debug(`Executing: ${packageCommand}`);
     
-    execSync(packageCommand, installOptions);
+    secureExec(packageCommand, installOptions);
     
     let distPlatform = '';
     switch(platform) {
@@ -631,7 +631,7 @@ async function buildSetup(appDir, platform, arch) {
       windowsHide: true
     };
     
-    execSync('npm install --save-dev electron-builder', installOptions);
+    secureExec('npm install --save-dev electron-builder', installOptions);
     
     let builderArgs = '';
     switch(platform) {
@@ -654,7 +654,7 @@ async function buildSetup(appDir, platform, arch) {
     
     const builderCommand = `npx electron-builder ${builderArgs}`;
     logger.debug(`Executing: ${builderCommand}`);
-    execSync(builderCommand, installOptions);
+    secureExec(builderCommand, installOptions);
     
     const installerPath = path.join(appDir, 'installer');
     if (fs.existsSync(installerPath)) {
@@ -712,7 +712,7 @@ async function createApp(url, options) {
       windowsHide: true
     };
 
-    execSync('npm install --only=prod', installOptions);
+    secureExec('npm install --only=prod', installOptions);
     logger.debug(`npm install completed`);
 
     let executablePath = null;

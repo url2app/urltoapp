@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { sanitizeInput } = require('./sanitize');
 
 async function normalizeUrl(url) {
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -9,7 +10,7 @@ async function normalizeUrl(url) {
       url = 'http://' + url;
     }
   }
-  return url;
+  return sanitizeInput(url);
 }
 
 function getDomainName(url) {
@@ -17,7 +18,7 @@ function getDomainName(url) {
     const { hostname } = new URL(url);
     return hostname.replace(/^www\./, '');
   } catch (error) {
-    return url;
+    return sanitizeInput(url);
   }
 }
 
