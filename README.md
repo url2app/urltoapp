@@ -42,3 +42,7 @@ U2A is a command-line utility that allows you to transform any web URL into a st
  
 ---
 Brought to you by [@douxxtech](https://github.com/douxxtech)
+
+---
+
+![readme views](https://prv-readme-views.dpip.lol/?id=urltoappreadme)
