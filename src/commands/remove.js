@@ -1,14 +1,14 @@
 const fs = require('fs');
 const inquirer = require('inquirer');
-const { normalizeUrl, getDomainName } = require('../utils/url');
 const { readDB, writeDB, APPS_DIR } = require('../utils/config');
 const Logger = require('../utils/logger');
 const { removeAppFromOS } = require('./create');
 const path = require('path');
+const { sanitizeInput } = require('../utils/sanitize');
 
 const logger = new Logger('remove');
 
-async function removeApp(appName) {
+async function processRemoval(appName) {
   try {
     const db = readDB();
 
@@ -51,6 +51,11 @@ async function removeApp(appName) {
   } catch (error) {
     logger.error(`Error removing the application ${appName}`, error);
   }
+}
+
+async function removeApp(appName) {
+  const sAppName = sanitizeInput(appName);
+  await processRemoval(sAppName);
 }
 
 module.exports = {

@@ -6,8 +6,10 @@ const { getFavicon, processFavicon } = require('../utils/favicon');
 const { APPS_DIR, readDB, writeDB } = require('../utils/config');
 const Logger = require('../utils/logger');
 const os = require('os');
+const { sanitizeInput } = require('../utils/sanitize');
 
 const logger = new Logger('create');
+
 
 function createWindowsShortcut(appInfo) {
   try {
@@ -673,8 +675,8 @@ async function createApp(url, options) {
 
   try {
     url = await normalizeUrl(url);
-    const domain = getDomainName(url);
-    const appName = options.name || domain;
+    const domain = sanitizeInput(getDomainName(url));
+    const appName = sanitizeInput(options.name || domain);
 
     const db = readDB();
     if (db.hasOwnProperty(appName)) {
