@@ -1,6 +1,6 @@
 {
     "name": "u2a",
-    "version": "3.2.6",
+    "version": "3.3.0",
     "description": "URL to App - Turn any URL into a desktop application",
     "main": "src/index.js",
     "bin": {
@@ -29,7 +29,8 @@
         "inquirer": "^8.2.5",
         "open": "^8.4.0",
         "png-to-ico": "^2.1.8",
-        "sharp": "^0.33.5"
+        "sharp": "^0.33.5",
+        "is-admin": "^3.0.0"
     },
     "homepage": "https://urltoapp.xyz",
     "repository": {
