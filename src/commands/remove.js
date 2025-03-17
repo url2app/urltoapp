@@ -34,14 +34,32 @@ async function processRemoval(appName) {
     const appInfo = db[appName];
     const appDir = appInfo.path;
 
-    removeAppFromOS(appName);
     logger.info(`Removing the application ${appName}...`);
+    removeAppFromOS(appName);
 
     const iconPath = path.join(APPS_DIR, `${appName}.ico`);
     if (fs.existsSync(iconPath)) {
       fs.unlinkSync(iconPath);
       logger.success(`Icon for ${appName} removed`);
     }
+
+    const packageName = `u2a-${appName.replace(/\s+/g, '-')}`;
+    let appDataPath;
+    
+    if (process.platform === 'win32') {
+      appDataPath = path.join(process.env.APPDATA, packageName);
+    } else if (process.platform === 'darwin') {
+      appDataPath = path.join(os.homedir(), 'Library', 'Application Support', packageName);
+    } else if (process.platform === 'linux') {
+      appDataPath = path.join(os.homedir(), '.config', packageName);
+    }
+
+    if (appDataPath && fs.existsSync(appDataPath)) {
+      fs.rmSync(appDataPath, { recursive: true, force: true });
+      logger.success(`Application data folder removed: ${appDataPath}`);
+    }
+
+    fs.rmSync(appDir, { recursive: true, force: true });
 
     fs.rmSync(appDir, { recursive: true, force: true });
     delete db[appName];
