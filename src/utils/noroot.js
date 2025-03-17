@@ -4,7 +4,12 @@ const Logger = require('./logger')
 
 const logger = new Logger('noroot');
 
-async function checkNotRoot() {
+async function checkNotRoot(allowRoot = false) {
+  if (allowRoot) {
+    logger.warn('Running with elevated privileges. This is not recommended.', '');
+    return;
+  }
+
   const platform = os.platform();
 
   switch (platform) {

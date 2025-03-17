@@ -16,14 +16,18 @@ const { setupConfig } = require('./utils/config');
 const { checkNotRoot } = require('./utils/noroot');
 
 (async () => {
-  await checkNotRoot();
-
-  setupConfig();
-
   program
     .name('u2a')
     .description('Convert websites into desktop applications')
-    .version(version);
+    .version(version)
+    .option('--allowroot', 'Allow running the application as root/administrator');
+
+  const parsed = program.parse(process.argv);
+  const options = parsed.opts();
+  
+  await checkNotRoot(options.allowroot);
+
+  setupConfig();
 
   program
     .command('create <url>')
@@ -53,8 +57,6 @@ const { checkNotRoot } = require('./utils/noroot');
     console.log(`\nUse --help to see the list of available commands.`);
     process.exit(1);
   });
-
-  program.parse(process.argv);
 
   if (process.argv.length <= 2) {
     program.help();
