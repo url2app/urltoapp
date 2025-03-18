@@ -4,7 +4,7 @@
     "description": "URL to App - Turn any URL into a desktop application",
     "main": "src/index.js",
     "bin": {
-        "u2a": "./src/index.js"
+        "u2a": "src/index.js"
     },
     "scripts": {
         "start": "node src/index.js"
@@ -35,7 +35,7 @@
     "homepage": "https://urltoapp.xyz",
     "repository": {
         "type": "git",
-        "url": "https://github.com/url2app/urltoapp"
+        "url": "git+https://github.com/url2app/urltoapp.git"
     },
     "bugs": {
         "url": "https://github.com/url2app/urltoapp/issues"
