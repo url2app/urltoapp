@@ -14,8 +14,10 @@ const { removeApp } = require('./commands/remove');
 const { version } = require('../package.json');
 const { setupConfig } = require('./utils/config');
 const { checkNotRoot } = require('./utils/noroot');
+const { checkVersion } = require('./utils/versionCheck');
 
 (async () => {
+  
   program
     .name('u2a')
     .description('Convert websites into desktop applications')
@@ -58,7 +60,9 @@ const { checkNotRoot } = require('./utils/noroot');
   const parsed = program.parse(process.argv);
   const options = parsed.opts();
   
-  await checkNotRoot(options.allowroot);
+  await checkNotRoot(options.allowroot).catch(() => {});
+  await checkVersion().catch(() => {});
 
   setupConfig();
+
 })();
