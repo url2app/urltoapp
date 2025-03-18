@@ -22,13 +22,6 @@ const { checkNotRoot } = require('./utils/noroot');
     .version(version)
     .option('--allowroot', 'Allow running the application as root/administrator');
 
-  const parsed = program.parse(process.argv);
-  const options = parsed.opts();
-  
-  await checkNotRoot(options.allowroot);
-
-  setupConfig();
-
   program
     .command('create <url>')
     .description('Create a new application from a URL')
@@ -61,4 +54,11 @@ const { checkNotRoot } = require('./utils/noroot');
   if (process.argv.length <= 2) {
     program.help();
   }
+
+  const parsed = program.parse(process.argv);
+  const options = parsed.opts();
+  
+  await checkNotRoot(options.allowroot);
+
+  setupConfig();
 })();
