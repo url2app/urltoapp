@@ -25,7 +25,7 @@ function listApps() {
     console.log(chalk.gray('  ----------'));
   });
 
-  logger.info('To remove an application: u2a remove <domain>');
+  logger.info('To remove an application: u2a remove "<app name>"');
 }
 
 module.exports = {
