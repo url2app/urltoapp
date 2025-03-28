@@ -30,6 +30,7 @@ const { checkVersion } = require('./utils/versionCheck');
     .option('--name <name>', 'Specify the application name')
     .option('--width <width>', 'Specify the window width', parseInt)
     .option('--height <height>', 'Specify the window height', parseInt)
+    .option('--icon <path>', 'Use a custom icon (.ico) instead of the default one')
     .option('--executable [windows|darwin|linux]', 'Create a single executable for the target system')
     .option('--arch [x64|armv7l|arm64|universal]', 'Specify the target architecture for the executable')
     .option('--setup', 'Creates a setup file for the executable')

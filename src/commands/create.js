@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 const { normalizeUrl, getDomainName } = require('../utils/url');
 const { getFavicon, processFavicon } = require('../utils/favicon');
 const { APPS_DIR, readDB, writeDB } = require('../utils/config');
@@ -57,7 +56,20 @@ async function createApp(url, options) {
       return;
     }
 
-    const iconPath = await getFavicon(url);
+    let iconPath;
+    if (options.icon) {
+      const iconFilePath = path.resolve(options.icon);
+      if (fs.existsSync(iconFilePath) && path.extname(iconFilePath) === '.ico') {
+        iconPath = iconFilePath;
+        logger.success(`Using ${iconPath} for ${appName}`)
+      } else {
+        logger.warn(`Provided icon path is not a valid .ico file: ${iconFilePath}`);
+      }
+    }
+
+    if (!iconPath) {
+      iconPath = await getFavicon(url);
+    }
 
     const appDir = path.join(APPS_DIR, appName);
     if (!fs.existsSync(appDir)) {
@@ -99,41 +111,38 @@ async function createApp(url, options) {
         const setupPath = await buildSetup(appDir, targetPlatform, options.arch);
         if (setupPath) {
           logger.debug(`Setup installer created at: ${setupPath}`);
-          
+
           const currentDir = process.cwd();
           const setupTargetDir = path.join(currentDir, `${appName}-setup`);
-          
+
           if (!fs.existsSync(setupTargetDir)) {
             fs.mkdirSync(setupTargetDir, { recursive: true });
           }
-          
+
           copyFolderRecursiveSync(setupPath, setupTargetDir);
           logger.success(`Setup installer created at: ${setupTargetDir}`);
         }
       }
-      
+
       if (executablePath) {
         logger.debug(`Executable created at: ${executablePath}`);
-        
+
         const currentDir = process.cwd();
         const targetDir = path.join(currentDir, `${appName}-executable`);
-        
+
         if (!fs.existsSync(targetDir)) {
           fs.mkdirSync(targetDir, { recursive: true });
         }
-        
+
         copyFolderRecursiveSync(executablePath, targetDir);
-        
+
         logger.success(`Executable created at: ${targetDir}`);
-        
+
         executablePath = targetDir;
-        
+
         removeAppFromOS(appName);
         remove(appDir);
-        if (path.basename(iconPath) !== "favicon.ico") {
-          remove(iconPath);
-        }
-        
+
         logger.debug(`Temporary application files removed after executable creation`);
         return;
       }

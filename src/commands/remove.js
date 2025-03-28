@@ -5,6 +5,7 @@ const Logger = require('../utils/logger');
 const { removeAppFromOS } = require('./create');
 const path = require('path');
 const { sanitizeInput } = require('../utils/sanitize');
+const { getDomainName } = require('../utils/url');
 
 const logger = new Logger('remove');
 
@@ -32,12 +33,13 @@ async function processRemoval(appName) {
     }
 
     const appInfo = db[appName];
+    const domain = getDomainName(appInfo.url)
     const appDir = appInfo.path;
 
     logger.info(`Removing the application ${appName}...`);
     removeAppFromOS(appName);
 
-    const iconPath = path.join(APPS_DIR, `${appName}.ico`);
+    const iconPath = path.join(APPS_DIR, `${domain}.ico`);
     if (fs.existsSync(iconPath)) {
       fs.unlinkSync(iconPath);
       logger.success(`Icon for ${appName} removed`);
@@ -60,8 +62,8 @@ async function processRemoval(appName) {
     }
 
     fs.rmSync(appDir, { recursive: true, force: true });
+    logger.success(`Application files removed: ${appDir}`);
 
-    fs.rmSync(appDir, { recursive: true, force: true });
     delete db[appName];
     writeDB(db);
 
