@@ -19,6 +19,7 @@ async function checkVersion(silent = false) {
 
     if (!silent && needsUpdate && latestVersion !== version) {
       logger.debug(`New update available: ${latestVersion}`);
+      console.log('');
       logger.warn(`A new update (${latestVersion}) is available ! Current version: ${version}`);
       logger.warn(`Update u2a with: npm install -g u2a@${latestVersion}`);
     }
