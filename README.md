@@ -41,7 +41,7 @@ U2A is a command-line utility that allows you to transform any web URL into a st
 > Full support for MacOs and Linux apps not guaranteed.  
  
 ---
-Brought to you by [@douxxtech](https://github.com/douxxtech)
+Brought to you by the [U2A Team](https://github.com/orgs/url2app/people) <3
 
 ---
 
