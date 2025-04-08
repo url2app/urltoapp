@@ -16,6 +16,8 @@ const { setupConfig } = require('./utils/config');
 const { checkNotRoot } = require('./utils/noroot');
 const { checkVersion } = require('./utils/versionCheck');
 
+setupConfig();
+
 (async () => {
   
   program
@@ -63,7 +65,4 @@ const { checkVersion } = require('./utils/versionCheck');
   
   await checkNotRoot(options.allowroot).catch(() => {});
   await checkVersion().catch(() => {});
-
-  setupConfig();
-
 })();
