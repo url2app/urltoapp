@@ -3,6 +3,18 @@ const path = require('path');
 const chalk = require('chalk');
 const { LOGS_DIR } = require('./config');
 
+/*
+  To use:
+  const Logger = require('./logger');
+  const logger = new Logger('name');
+
+  //then
+  logger.info('information');
+  logger.warn('warning');
+  logger.error('error message', 'error');
+*/
+
+
 class Logger {
   constructor(component) {
     this.component = component;
