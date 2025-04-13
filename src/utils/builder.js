@@ -114,7 +114,8 @@ async function buildSetup(appDir, platform, arch) {
       return null;
     }
   } catch (error) {
-    logger.error(`Error while building setup:`, error);
+    logger.error(`Error while building setup.`, error);
+    logger.warn('Try to run u2a with administrator privileges to avoid this error.')
     return null;
   }
 }

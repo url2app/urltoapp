@@ -6,7 +6,7 @@ const logger = new Logger('noroot');
 
 async function checkNotRoot(allowRoot = false) {
   if (allowRoot) {
-    logger.warn('Running with elevated privileges. This is not recommended.', '');
+    logger.warn('Running with elevated privileges. This is not recommended.');
     return;
   }
 
@@ -15,7 +15,9 @@ async function checkNotRoot(allowRoot = false) {
   switch (platform) {
     case 'win32':
       if (await isAdmin()) {
-        logger.error('This application should not be run as an administrator.', '');
+        logger.error('This application should not be run as an administrator.');
+        logger.warn('Run with --allowroot to avoid this message.');
+        logger.warn('Running u2a as administrator can be dangerous.');
         process.exit(1);
       }
       break;
@@ -23,7 +25,9 @@ async function checkNotRoot(allowRoot = false) {
     case 'darwin':
     case 'linux':
       if (process.getuid() === 0) {
-        logger.error('This application should not be run as root.', '');
+        logger.error('This application should not be run as root.');
+        logger.warn('Run with --allowroot to avoid this message.');
+        logger.warn('Running u2a as root can be dangerous.');
         process.exit(1);
       }
       break;

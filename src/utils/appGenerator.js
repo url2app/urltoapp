@@ -254,7 +254,7 @@ app.on('activate', () => {
   }
 });
 `;
-}
+} // note for one day: put this in a different file
 
 async function createPackageJson(appName, iconPath, isExecutable = false, createSetup = false) {
   const u2aPackagePath = path.resolve(__dirname, '../../package.json');
