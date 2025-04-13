@@ -1,13 +1,14 @@
 {
     "name": "u2a",
-    "version": "3.4.20",
+    "version": "3.5.0",
     "description": "URL to App - Turn any URL into a desktop application",
     "main": "src/index.js",
     "bin": {
         "u2a": "src/index.js"
     },
     "scripts": {
-        "start": "node src/index.js"
+        "start": "node src/index.js",
+        "postinstall": "node src/utils/postinstall.js"
     },
     "keywords": [
         "cli",

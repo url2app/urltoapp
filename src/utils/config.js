@@ -6,6 +6,7 @@ const CONFIG_DIR = path.join(os.homedir(), '.u2a');
 const APPS_DIR = path.join(CONFIG_DIR, 'apps');
 const LOGS_DIR = path.join(CONFIG_DIR, 'logs');
 const DB_PATH = path.join(CONFIG_DIR, 'db.json');
+const SETTINGS_PATH = path.join(CONFIG_DIR, 'settings.json');
 
 function setupConfig() {
   if (!fs.existsSync(CONFIG_DIR)) {
@@ -19,6 +20,9 @@ function setupConfig() {
   }
   if (!fs.existsSync(DB_PATH)) {
     fs.writeFileSync(DB_PATH, JSON.stringify({}, null, 2));
+  }
+  if (!fs.existsSync(SETTINGS_PATH)) {
+    fs.writeFileSync(SETTINGS_PATH, JSON.stringify({}, null, 2));
   }
 }
 
@@ -41,6 +45,8 @@ module.exports = {
   CONFIG_DIR,
   APPS_DIR,
   LOGS_DIR,
+  DB_PATH,
+  SETTINGS_PATH,
   setupConfig,
   readDB,
   writeDB,

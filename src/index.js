@@ -11,6 +11,7 @@ const { program } = require('commander');
 const { createApp } = require('./commands/create');
 const { listApps } = require('./commands/list');
 const { removeApp } = require('./commands/remove');
+const { configure } = require('./commands/configure');
 const { version } = require('../package.json');
 const { setupConfig } = require('./utils/config');
 const { checkNotRoot } = require('./utils/noroot');
@@ -49,6 +50,13 @@ setupConfig();
     .command('remove <url>')
     .description('Remove an existing application')
     .action(removeApp);
+
+  program
+  .command('configure [category] [action]')
+  .description('Configure application settings')
+  .action((category, action) => {
+    configure(category, action);
+  });
 
   program.on('command:*', () => {
     console.error(`\nInvalid command: ${program.args.join(' ')}`);
