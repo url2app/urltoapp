@@ -24,7 +24,7 @@ class Logger {
 
   info(message) {
     const formattedMessage = this._format('INFO', message);
-    console.log(chalk.blue(formattedMessage));
+    console.log(chalk.blueBright(formattedMessage));
     this._writeToFile(formattedMessage);
   }
 
