@@ -8,7 +8,6 @@
     },
     "scripts": {
         "start": "node src/index.js",
-        "debug": "set DEBUG=1 && node src/index.js",
         "postinstall": "node src/utils/postinstall.js"
     },
     "keywords": [
