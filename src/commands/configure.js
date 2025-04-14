@@ -1,7 +1,7 @@
 const Logger = require('../utils/logger');
 const chalk = require('chalk');
-const { getSetting, setSetting, resetSetting, DEFAULT_SETTINGS } = require('../utils/settings');
-
+const { initSettings, getSetting, setSetting, resetSetting, DEFAULT_SETTINGS } = require('../utils/settings');
+const inquirer = require('inquirer');
 
 const logger = new Logger('configure');
 
@@ -20,11 +20,10 @@ function configureReports(action) {
       logger.info(chalk.yellow('Anonymous reports have been disabled'));
     } else if (action === 'reset') {
       resetSetting('send_anon_reports');
-      logger.info('Anonymous reports have been resetted');
+      logger.info(`Anonymous reports have been resetted to: ${DEFAULT_SETTINGS.send_anon_reports ? chalk.green('enabled') : chalk.yellow('disabled')}`);
     } else {
       logger.error(`Invalid action: ${action}`);
       logger.info('Available actions: status, enable, disable, reset');
-
       return;
     }
   } catch (err) {
@@ -47,7 +46,7 @@ function configureVersionCheck(action) {
       logger.info(chalk.yellow('Version check has been disabled'));
     } else if (action === 'reset') {
       resetSetting('version_check');
-      logger.info('Anonymous reports have been resetted');
+      logger.info(`Version check has been resetted to: ${DEFAULT_SETTINGS.send_anon_reports ? chalk.green('enabled') : chalk.yellow('disabled')}`);
     } else {
       logger.error(`Invalid action: ${action}`);
       logger.info('Available actions: status, enable, disable, reset');
@@ -58,19 +57,49 @@ function configureVersionCheck(action) {
   }
 }
 
-function configure(category, action) {
+async function resetSettings(action) {
+  try {
+    if (action === 'reset') {
+      const answer = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirm',
+          message: `Are you sure you want to reset all settings to default?`,
+          default: false
+        }
+      ]);
+
+      if (!answer.confirm) {
+        logger.info('Operation canceled');
+        return;
+      }
+
+      initSettings(true);
+      logger.info(chalk.green('All settings have been reset'));
+      return;
+    } else {
+      logger.error(`Invalid action: ${action}`);
+      logger.info('Available actions: reset');
+      return;
+    }
+  } catch (err) {
+    logger.error(`Error resetting settings`, err.message);
+  }
+}
+
+async function configure(category, action) {
   if (!category || !action) {
     logger.error('Missing category or action');
     logger.info('Usage: u2a configure [category] [action]');
     logger.info('Available categories:');
     logger.info('  reports - Configure anonymous usage reports');
+    logger.info('  settings - Resets settings (only reset action)');
     logger.info('  vcheck - Configure automatic version check');
     logger.info('Available actions:');
     logger.info('  status  - Check current status');
     logger.info('  enable  - Enable specified category');
     logger.info('  disable - Disable specified category');
     logger.info('  reset - Resets specified category to default');
-
     return;
   }
 
@@ -81,9 +110,12 @@ function configure(category, action) {
     case 'vcheck':
       configureVersionCheck(action);
       break;
+    case 'settings':
+      await resetSettings(action);
+      break;
     default:
       logger.error(`Unknown configuration category: ${category}`);
-      logger.info('Available categories: reports, vcheck');
+      logger.info('Available categories: reports, vcheck, settings');
       break;
   }
 }
