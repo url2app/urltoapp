@@ -6,7 +6,9 @@ const logger = new Logger('settings');
 
 const DEFAULT_SETTINGS = {
     send_anon_reports: true,
-    version_check: true
+    version_check: true,
+    always_show_debug: flase,
+
 };
 
 // reset is DANGEROUS ! resets all settings

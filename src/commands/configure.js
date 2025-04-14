@@ -46,7 +46,7 @@ function configureVersionCheck(action) {
       logger.info(chalk.yellow('Version check has been disabled'));
     } else if (action === 'reset') {
       resetSetting('version_check');
-      logger.info(`Version check has been resetted to: ${DEFAULT_SETTINGS.send_anon_reports ? chalk.green('enabled') : chalk.yellow('disabled')}`);
+      logger.info(`Version check has been resetted to: ${DEFAULT_SETTINGS.version_check ? chalk.green('enabled') : chalk.yellow('disabled')}`);
     } else {
       logger.error(`Invalid action: ${action}`);
       logger.info('Available actions: status, enable, disable, reset');
@@ -54,6 +54,32 @@ function configureVersionCheck(action) {
     }
   } catch (err) {
     logger.error(`Error configuring version check`, err.message);
+  }
+}
+
+function configureDebug(action) {
+  try {
+    if (action === 'status') {
+      const status = getSetting('always_show_debug');
+      logger.info(`Debug logs are currently ${status ? chalk.green('enabled') : chalk.yellow('disabled')}`);
+      logger.info(`Default setting is: ${DEFAULT_SETTINGS.always_show_debug ? chalk.green('enabled') : chalk.yellow('disabled')}`);
+      return;
+    } else if (action === 'enable') {
+      setSetting('always_show_debug', true);
+      logger.info(chalk.green('Debug logs have been enabled'));
+    } else if (action === 'disable') {
+      setSetting('always_show_debug', false);
+      logger.info(chalk.yellow('Debug logs have been disabled'));
+    } else if (action === 'reset') {
+      resetSetting('always_show_debug');
+      logger.info(`Debug logs have been resetted to: ${DEFAULT_SETTINGS.always_show_debug ? chalk.green('enabled') : chalk.yellow('disabled')}`);
+    } else {
+      logger.error(`Invalid action: ${action}`);
+      logger.info('Available actions: status, enable, disable, reset');
+      return;
+    }
+  } catch (err) {
+    logger.error(`Error configuring debug logs`, err.message);
   }
 }
 
@@ -92,6 +118,7 @@ async function configure(category, action) {
     logger.error('Missing category or action');
     logger.info('Usage: u2a configure [category] [action]');
     logger.info('Available categories:');
+    logger.info('  debug - Configure always showing debug logs');
     logger.info('  reports - Configure anonymous usage reports');
     logger.info('  settings - Resets settings (only reset action)');
     logger.info('  vcheck - Configure automatic version check');
@@ -110,12 +137,15 @@ async function configure(category, action) {
     case 'vcheck':
       configureVersionCheck(action);
       break;
+    case 'debug':
+      configureDebug(action);
+      break;
     case 'settings':
       await resetSettings(action);
       break;
     default:
       logger.error(`Unknown configuration category: ${category}`);
-      logger.info('Available categories: reports, vcheck, settings');
+      logger.info('Available categories: debug, reports, vcheck, settings');
       break;
   }
 }
