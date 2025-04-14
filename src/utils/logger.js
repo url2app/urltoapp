@@ -64,9 +64,13 @@ class Logger {
 
   debug(message, msg2 = '') {
     // i added msg2 cuz some parts of the code are using it, idk why
+
+    const { getSetting } = require('./settings');
+    const debugSetting = getSetting('always_show_debug');
+
     const formattedMessage = this._format('DEBUG', `${message}${msg2 ? ' ' + msg2 : ''}`);
 
-    if (process.env.DEBUG) {
+    if (process.env.DEBUG || debugSetting) {
       console.log(chalk.gray(formattedMessage));
     }
     this._writeToFile(formattedMessage);
