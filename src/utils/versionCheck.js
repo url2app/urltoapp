@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { version } = require('../../package.json');
 const Logger = require('./logger');
+const { getSetting } = require('./settings');
 
 const logger = new Logger('version-check');
 
@@ -12,7 +13,23 @@ const UPDATE_TYPES = {
   FEATURE: 'feature'
 };
 
-async function checkVersion(silent = false) {
+async function checkVersion(silent = false, forceCheck = false) {
+  //check if version check is enabled in settings
+  const versionCheckEnabled = getSetting('version_check');
+
+  //if version check is disabled and not forcing skip the check (btw idk why i made forcecheck)
+  if (!versionCheckEnabled && !forceCheck) {
+    logger.debug('Version check is disabled in settings');
+    return {
+      current: version,
+      latest: null,
+      needsUpdate: false,
+      updateType: UPDATE_TYPES.NONE,
+      skipped: true,
+      reason: 'version_check disabled in settings'
+    };
+  }
+
   try {
     logger.debug('Started version check');
     const response = await axios.get('https://urltoapp.xyz/api/v1/getlastest', {
@@ -21,7 +38,7 @@ async function checkVersion(silent = false) {
 
     const latestVersion = response.data.trim();
     logger.debug(`Version retrieved: ${latestVersion}`);
-    
+
     const versionComparison = compareVersions(version, latestVersion);
     const updateType = getUpdateType(version, latestVersion);
     const needsUpdate = versionComparison < 0;
@@ -29,22 +46,22 @@ async function checkVersion(silent = false) {
     if (!silent && needsUpdate) {
       logger.debug(`New update available: ${latestVersion} (${updateType})`);
       console.log('');
-      
+
       const updateMessages = {
         [UPDATE_TYPES.SECURITY]: `CRITICAL: Security update (${latestVersion}) available!`,
         [UPDATE_TYPES.CORE]: `IMPORTANT: Core update (${latestVersion}) available!`,
         [UPDATE_TYPES.FEATURE]: `NEW: Feature update (${latestVersion}) available!`
       };
-      
+
       if (updateType === UPDATE_TYPES.SECURITY) {
         logger.error(updateMessages[UPDATE_TYPES.SECURITY]); //using .error cuz im lazy to do other variations, sorry ! :)
       } else {
         logger.warn(updateMessages[updateType] || `A new update (${latestVersion}) is available!`);
       }
-      
+
       logger.warn(`Current version: ${version}`);
       logger.warn(`Update u2a with: npm install -g u2a@${latestVersion}`);
-      
+
       if (updateType === UPDATE_TYPES.SECURITY) {
         logger.error('This update fixes SECURITY VULNERABILITIES and should be installed immediately!');
       }
@@ -55,15 +72,18 @@ async function checkVersion(silent = false) {
       latest: latestVersion,
       needsUpdate,
       updateType,
-      updateDetails: needsUpdate ? getUpdateDetails(version, latestVersion) : null
+      updateDetails: needsUpdate ? getUpdateDetails(version, latestVersion) : null,
+      skipped: false
     };
   } catch (error) {
+    logger.debug(`Version check failed: ${error.message}`);
     return {
       current: version,
       latest: null,
       needsUpdate: false,
       updateType: UPDATE_TYPES.NONE,
-      error: error.message
+      error: error.message,
+      skipped: false
     };
   }
 }
@@ -71,15 +91,15 @@ async function checkVersion(silent = false) {
 function compareVersions(v1, v2) {
   const parts1 = v1.split('.').map(Number);
   const parts2 = v2.split('.').map(Number);
-  
+
   for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
     const part1 = parts1[i] || 0;
     const part2 = parts2[i] || 0;
-    
+
     if (part1 < part2) return -1;
     if (part1 > part2) return 1;
   }
-  
+
   return 0;
 }
 
@@ -87,10 +107,10 @@ function getUpdateType(currentVersion, latestVersion) {
   if (currentVersion === latestVersion) {
     return UPDATE_TYPES.NONE;
   }
-  
+
   const current = currentVersion.split('.').map(Number);
   const latest = latestVersion.split('.').map(Number);
-  
+
   /*
     a.b.c format where:
     a: security version
@@ -106,15 +126,14 @@ function getUpdateType(currentVersion, latestVersion) {
   } else if (latest[2] > current[2]) {
     return UPDATE_TYPES.FEATURE;
   }
-  
+
   return UPDATE_TYPES.NONE; //current is newer or same
 }
-
 
 function getUpdateDetails(currentVersion, latestVersion) {
   const current = currentVersion.split('.').map(Number);
   const latest = latestVersion.split('.').map(Number);
-  
+
   return {
     securityChanges: latest[0] - current[0],
     coreChanges: latest[1] - current[1],
