@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const Logger = require('./logger');
-const { setupConfig, CONFIG_DIR, SETTINGS_PATH } = require('./config');
+const { setupConfig, CONFIG_DIR } = require('./config');
+const { initSettings, getSetting } = require('./settings');
 
 setupConfig(); // builds ~/.u2a/*
 
@@ -45,21 +46,15 @@ async function run() {
             logger.info(formatVersionLine('Old version', currentVersion));
             logger.info(formatVersionLine('New version', newVersion));
             logger.info(';=============================;');
+
+            initSettings();
         } catch (err) {
             logger.error(`Error reading postinstall.json`, err.message);
             isUpgrade = false;
         }
     }
 
-    if (fs.existsSync(SETTINGS_PATH)) {
-        try {
-            const settingsData = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
-            sendAnonReports = settingsData.send_anon_reports !== false;
-        } catch (err) {
-            logger.error(`Error reading settings.json`, err.message);
-            sendAnonReports = true;
-        }
-    }
+    const sendAnonReports = getSetting('send_anon_reports');
 
     // shows this cool message if it isnt an upgrade
     if (!isUpgrade) {
@@ -81,8 +76,7 @@ async function run() {
         logger.info('; disable\'                    ;');
         logger.info(';=============================;');
         
-        const settings = { send_anon_reports: true };
-        fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+        initSettings(true);
     }
 
     const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
