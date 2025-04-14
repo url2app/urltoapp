@@ -2,6 +2,7 @@ const axios = require('axios');
 const { version } = require('../../package.json');
 const Logger = require('./logger');
 const { getSetting } = require('./settings');
+const chalk = require('chalk');
 
 const logger = new Logger('version-check');
 
@@ -60,7 +61,7 @@ async function checkVersion(silent = false, forceCheck = false) {
       }
 
       logger.warn(`Current version: ${version}`);
-      logger.warn(`Update u2a with: npm install -g u2a@${latestVersion}`);
+      logger.warn(`Update u2a with: ${chalk.underline(`npm install -g u2a@${latestVersion}`)}`);
 
       if (updateType === UPDATE_TYPES.SECURITY) {
         logger.error('This update fixes SECURITY VULNERABILITIES and should be installed immediately!');
