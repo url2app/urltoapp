@@ -89,6 +89,7 @@ function setSetting(key, value) {
 }
 
 module.exports = {
+    initSettings,
     getSettings,
     saveSettings,
     getSetting,
