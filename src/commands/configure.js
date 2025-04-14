@@ -1,6 +1,6 @@
 const Logger = require('../utils/logger');
 const chalk = require('chalk');
-const { getSetting, setSetting, DEFAULT_SETTINGS } = require('../utils/settings');
+const { getSetting, setSetting, resetSetting, DEFAULT_SETTINGS } = require('../utils/settings');
 
 
 const logger = new Logger('configure');
@@ -18,9 +18,13 @@ function configureReports(action) {
     } else if (action === 'disable') {
       setSetting('send_anon_reports', false);
       logger.info(chalk.yellow('Anonymous reports have been disabled'));
+    } else if (action === 'reset') {
+      resetSetting('send_anon_reports');
+      logger.info('Anonymous reports have been resetted');
     } else {
       logger.error(`Invalid action: ${action}`);
-      logger.info('Available actions: status, enable, disable');
+      logger.info('Available actions: status, enable, disable, reset');
+
       return;
     }
   } catch (err) {
@@ -41,9 +45,12 @@ function configureVersionCheck(action) {
     } else if (action === 'disable') {
       setSetting('version_check', false);
       logger.info(chalk.yellow('Version check has been disabled'));
+    } else if (action === 'reset') {
+      resetSetting('version_check');
+      logger.info('Anonymous reports have been resetted');
     } else {
       logger.error(`Invalid action: ${action}`);
-      logger.info('Available actions: status, enable, disable');
+      logger.info('Available actions: status, enable, disable, reset');
       return;
     }
   } catch (err) {
@@ -62,6 +69,8 @@ function configure(category, action) {
     logger.info('  status  - Check current status');
     logger.info('  enable  - Enable specified category');
     logger.info('  disable - Disable specified category');
+    logger.info('  reset - Resets specified category to default');
+
     return;
   }
 
