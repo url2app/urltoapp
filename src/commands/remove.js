@@ -9,7 +9,7 @@ const { getDomainName } = require('../utils/url');
 
 const logger = new Logger('remove');
 
-async function processRemoval(appName) {
+async function processRemoval(appName, useInquirer) {
   try {
     const db = readDB();
 
@@ -18,18 +18,22 @@ async function processRemoval(appName) {
       return;
     }
 
-    const { confirm } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: `Are you sure you want to remove the application for ${appName}?`,
-        default: false
-      }
-    ]);
+    if (useInquirer) {
 
-    if (!confirm) {
-      logger.info('Operation canceled');
-      return;
+      const { confirm } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirm',
+          message: `Are you sure you want to remove the application for ${appName}?`,
+          default: false
+        }
+      ]);
+
+      if (!confirm) {
+        logger.info('Operation canceled');
+        return;
+      }
+
     }
 
     const appInfo = db[appName];
@@ -73,9 +77,9 @@ async function processRemoval(appName) {
   }
 }
 
-async function removeApp(appName) {
+async function removeApp(appName, useInquirer = true) {
   const sAppName = sanitizeInput(appName);
-  await processRemoval(sAppName);
+  await processRemoval(sAppName, useInquirer);
 }
 
 module.exports = {

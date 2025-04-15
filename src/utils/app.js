@@ -5,8 +5,8 @@ const fs = require('fs');
 const APP_NAME = "{APP_NAME}";
 const APP_URL = "{APP_URL}";
 const APP_ICON_PATH = "{APP_ICON_PATH}";
-const WINDOW_WIDTH = { WINDOW_WIDTH };
-const WINDOW_HEIGHT = { WINDOW_HEIGHT };
+const WINDOW_WIDTH = {WINDOW_WIDTH};
+const WINDOW_HEIGHT = {WINDOW_HEIGHT};
 
 let mainWindow;
 let splashWindow;

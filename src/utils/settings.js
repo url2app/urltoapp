@@ -8,7 +8,7 @@ const DEFAULT_SETTINGS = {
     send_anon_reports: true,
     version_check: true,
     always_show_debug: false,
-    autoupgrade_localapps: true,
+    autoupgrade_localapps: false,
 
 };
 

@@ -7,6 +7,7 @@ const axios = require('axios');
 const Logger = require('./logger');
 const { setupConfig, CONFIG_DIR } = require('./config');
 const { initSettings, getSetting } = require('./settings');
+const { upgrade } = require('./upgradeLA');
 
 setupConfig(); // builds ~/.u2a/*
 
@@ -51,6 +52,7 @@ async function run() {
             logger.info(';=============================;');
 
             initSettings();
+            upgrade();
         } catch (err) {
             logger.error(`Error reading postinstall.json`, err.message);
             isUpgrade = false;
@@ -81,6 +83,7 @@ async function run() {
 
         initSettings(true);
     }
+
 
     const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
     let newVersion = '';
@@ -115,6 +118,37 @@ async function run() {
         }, null, 2));
     } catch (err) {
         logger.error(`Error updating postinstall.json`, err.message);
+    }
+
+    if (isUpgrade) {
+        try {
+            logger.info('Checking for local apps that need upgrading...');
+            const upgradeStats = await upgrade(currentVersion, newVersion);
+
+            if (upgradeStats.skipped) {
+                if (upgradeStats.reason === 'disabled') {
+                    logger.warn('Automatic upgrade for local apps is disabled in settings, skipped.');
+                } else if (upgradeStats.reason === 'not-core-update') {
+                    logger.warn('This is not a core update, skipping local apps upgrade');
+                } else if (upgradeStats.reason === 'new-install') {
+                    logger.warn('New installation, no local apps to upgrade');
+                }
+            } else {
+                logger.warn(`Local apps upgrade results: ${upgradeStats.upgraded} upgraded, ${upgradeStats.failed} failed`);
+
+                if (upgradeStats.upgraded > 0) {
+                    logger.info(';=============================;');
+                    logger.info('; Local apps have been updated;');
+                    logger.info(formatVersionLine("Updated", upgradeStats.upgraded.toString())); //not a version but who cares anyway
+                    if (upgradeStats.failed > 0) {
+                        logger.info(formatVersionLine("Skipped", upgradeStats.failed.toString()));
+                    }
+                    logger.info(';=============================;');
+                }
+            }
+        } catch (err) {
+            logger.error('Error while upgrading local apps:', err.message);
+        }
     }
 }
 
