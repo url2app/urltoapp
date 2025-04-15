@@ -13,7 +13,7 @@ function generateMainJs(appName, url, iconPath, options = {}) {
 
   const templatePath = path.join(__dirname, 'app.js');
   let template;
-  
+
   try {
     template = fs.readFileSync(templatePath, 'utf8');
   } catch (error) {
@@ -75,7 +75,7 @@ async function createPackageJson(appName, iconPath, isExecutable = false, create
     };
 
     packageJson.dependencies = {};
-    
+
     packageJson.scripts.package = "electron-packager . --overwrite --asar";
     packageJson.scripts.setup = "electron-builder";
   }

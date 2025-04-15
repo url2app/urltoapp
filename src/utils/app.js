@@ -5,8 +5,8 @@ const fs = require('fs');
 const APP_NAME = "{APP_NAME}";
 const APP_URL = "{APP_URL}";
 const APP_ICON_PATH = "{APP_ICON_PATH}";
-const WINDOW_WIDTH = {WINDOW_WIDTH};
-const WINDOW_HEIGHT = {WINDOW_HEIGHT};
+const WINDOW_WIDTH = { WINDOW_WIDTH };
+const WINDOW_HEIGHT = { WINDOW_HEIGHT };
 
 let mainWindow;
 let splashWindow;
@@ -67,7 +67,7 @@ function createSplashScreen() {
   const loaderBgColor = isDarkMode ? '#555555' : '#e0e0e0';
   const loaderColor = isDarkMode ? '#ffffff' : '#2563eb';
   const shadowColor = isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.2)';
-  
+
   const splashHtml = `
   <!DOCTYPE html>
   <html>
@@ -149,11 +149,11 @@ function createSplashScreen() {
   fs.writeFileSync(splashPath, splashHtml);
 
   splashWindow.loadFile(splashPath);
-  
+
   const { screen } = require('electron');
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
-  
+
   splashWindow.setPosition(
     Math.floor(width / 2 - 100),
     Math.floor(height / 2 - 20)

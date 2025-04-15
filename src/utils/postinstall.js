@@ -21,7 +21,7 @@ const formatVersionLine = (label, version) => {
     const baseLength = `; ${label}: `.length + version.length;
     const spaceCount = Math.max(0, 30 - baseLength);
     const spaces = ' '.repeat(spaceCount);
-    
+
     return `; ${label}: ${version}${spaces};`;
 };
 
@@ -32,7 +32,7 @@ async function run() {
             const postinstallData = JSON.parse(fs.readFileSync(postinstallJsonPath, 'utf8'));
             currentVersion = postinstallData.version || '';
             isUpgrade = true;
-            
+
             let newVersion = '';
             try {
                 const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
@@ -42,7 +42,7 @@ async function run() {
                 logger.error(`Error reading package.json for display`, err.message);
                 newVersion = 'unknown';
             }
-            
+
             logger.info(';=============================;');
             logger.info('; u2a has been updated!       ;');
             logger.info('; Successfully migrated from  ;');
@@ -78,13 +78,13 @@ async function run() {
         logger.info('; \'u2a configure reports      ;');
         logger.info('; disable\'                    ;');
         logger.info(';=============================;');
-        
+
         initSettings(true);
     }
 
     const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
     let newVersion = '';
-    
+
     try {
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
         newVersion = packageJson.version || '';

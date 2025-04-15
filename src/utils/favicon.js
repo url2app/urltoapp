@@ -4,7 +4,7 @@ const axios = require('axios');
 const { APPS_DIR } = require('./config');
 const { normalizeUrl, getDomainName } = require('./url');
 const Logger = require('./logger');
-const { parseICO} = require('icojs');
+const { parseICO } = require('icojs');
 const sharp = require('sharp');
 const pngToIco = require('png-to-ico');
 
@@ -18,7 +18,7 @@ async function getFavicon(url) {
   try {
     const domain = getDomainName(url);
     const normalizedUrl = await normalizeUrl(url);
-    
+
     const faviconUrl = `${normalizedUrl}/favicon.ico`;
     const iconResponse = await axios.get(faviconUrl, { responseType: 'arraybuffer' });
 

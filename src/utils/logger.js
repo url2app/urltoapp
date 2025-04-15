@@ -22,10 +22,10 @@ class Logger {
   }
 
   _format(status, message) {
-    const timestamp = new Date().toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
+    const timestamp = new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
     });
     return `[${timestamp}] - ${status} | ${message}`;
   }
@@ -56,7 +56,7 @@ class Logger {
     const formattedMessage = this._format('ERROR', `${message}${error ? ' ' + error : ''}`);
     console.log(chalk.red(formattedMessage));
     this._writeToFile(formattedMessage);
-    
+
     if (error && error.stack) {
       this._writeToFile(`Stack trace: ${error.stack}`);
     }

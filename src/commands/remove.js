@@ -47,7 +47,7 @@ async function processRemoval(appName) {
 
     const packageName = `u2a-${appName.replace(/\s+/g, '-')}`;
     let appDataPath;
-    
+
     if (process.platform === 'win32') {
       appDataPath = path.join(process.env.APPDATA, packageName);
     } else if (process.platform === 'darwin') {

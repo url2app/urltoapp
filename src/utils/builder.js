@@ -7,21 +7,21 @@ const logger = new Logger('builder');
 
 async function buildExecutable(appDir, appName, platform, iconPath, options) {
   logger.info(`Building executable for ${platform}...`);
-  
+
   try {
     const installOptions = {
       cwd: appDir,
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true
     };
-    
+
     secureExec('npm install --save-dev electron-packager electron', installOptions);
-    
+
     let platformFlag = '';
     let archFlag = `--arch=${options.arch || 'x64'}`;
     let iconOption = '';
-    
-    switch(platform) {
+
+    switch (platform) {
       case 'windows':
         platformFlag = '--platform=win32';
         iconOption = iconPath ? `--icon="${iconPath}"` : '';
@@ -40,23 +40,23 @@ async function buildExecutable(appDir, appName, platform, iconPath, options) {
       default:
         platformFlag = `--platform=${process.platform}`;
     }
-    
+
     const packageCommand = `npx electron-packager . "${appName}" ${platformFlag} ${archFlag} --out=dist --overwrite --asar ${iconOption}`;
-    
+
     logger.debug(`Executing: ${packageCommand}`);
-    
+
     secureExec(packageCommand, installOptions);
-    
+
     let distPlatform = '';
-    switch(platform) {
+    switch (platform) {
       case 'windows': distPlatform = 'win32'; break;
       case 'darwin': distPlatform = 'darwin'; break;
       case 'linux': distPlatform = 'linux'; break;
       default: distPlatform = process.platform;
     }
-    
+
     const outputPath = path.join(appDir, 'dist', `${appName}-${distPlatform}-x64`);
-    
+
     if (fs.existsSync(outputPath)) {
       logger.debug(`Executable built successfully at: ${outputPath}`);
       return outputPath;
@@ -72,18 +72,18 @@ async function buildExecutable(appDir, appName, platform, iconPath, options) {
 
 async function buildSetup(appDir, platform, arch) {
   logger.info(`Building setup for ${platform}${arch ? ` (${arch})` : ''}...`);
-  
+
   try {
     const installOptions = {
       cwd: appDir,
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true
     };
-    
+
     secureExec('npm install --save-dev electron-builder', installOptions);
-    
+
     let builderArgs = '';
-    switch(platform) {
+    switch (platform) {
       case 'windows':
         builderArgs = '--win';
         break;
@@ -96,15 +96,15 @@ async function buildSetup(appDir, platform, arch) {
       default:
         builderArgs = '';
     }
-    
+
     if (arch) {
       builderArgs += ` --${arch}`;
     }
-    
+
     const builderCommand = `npx electron-builder ${builderArgs}`;
     logger.debug(`Executing: ${builderCommand}`);
     secureExec(builderCommand, installOptions);
-    
+
     const installerPath = path.join(appDir, 'installer');
     if (fs.existsSync(installerPath)) {
       logger.debug(`Setup created at: ${installerPath}`);
@@ -121,6 +121,6 @@ async function buildSetup(appDir, platform, arch) {
 }
 
 module.exports = {
-    buildExecutable,
-    buildSetup
+  buildExecutable,
+  buildSetup
 }
