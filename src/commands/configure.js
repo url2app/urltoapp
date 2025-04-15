@@ -83,6 +83,32 @@ function configureDebug(action) {
   }
 }
 
+function configureAutoUpgrade(action) {
+  try {
+    if (action === 'status') {
+      const status = getSetting('autoupgrade_localapps');
+      logger.info(`Debug logs are currently ${status ? chalk.green('enabled') : chalk.yellow('disabled')}`);
+      logger.info(`Default setting is: ${DEFAULT_SETTINGS.autoupgrade_localapps ? chalk.green('enabled') : chalk.yellow('disabled')}`);
+      return;
+    } else if (action === 'enable') {
+      setSetting('autoupgrade_localapps', true);
+      logger.info(chalk.green('Automatic upgrades have been enabled'));
+    } else if (action === 'disable') {
+      setSetting('autoupgrade_localapps', false);
+      logger.info(chalk.yellow('Automatic upgrades have been disabled'));
+    } else if (action === 'reset') {
+      resetSetting('autoupgrade_localapps');
+      logger.info(`Automatic upgrades have been resetted to: ${DEFAULT_SETTINGS.autoupgrade_localapps ? chalk.green('enabled') : chalk.yellow('disabled')}`);
+    } else {
+      logger.error(`Invalid action: ${action}`);
+      logger.info('Available actions: status, enable, disable, reset');
+      return;
+    }
+  } catch (err) {
+    logger.error(`Error configuring auto upgrade`, err.message);
+  }
+}
+
 async function resetSettings(action) {
   try {
     if (action === 'reset') {
@@ -118,6 +144,7 @@ async function configure(category, action) {
     logger.error('Missing category or action');
     logger.info('Usage: u2a configure [category] [action]');
     logger.info('Available categories:');
+    logger.info('  autoupgrade - Configure automatic upgrade on installed localapps on update');
     logger.info('  debug - Configure always showing debug logs');
     logger.info('  reports - Configure anonymous usage reports');
     logger.info('  settings - Resets settings (only reset action)');
@@ -142,6 +169,9 @@ async function configure(category, action) {
       break;
     case 'settings':
       await resetSettings(action);
+      break;
+    case 'autoupgrade':
+      await configureAutoUpgrade(action);
       break;
     default:
       logger.error(`Unknown configuration category: ${category}`);

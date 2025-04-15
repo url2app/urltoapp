@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS = {
     send_anon_reports: true,
     version_check: true,
     always_show_debug: false,
+    autoupgrade_localapps: true,
 
 };
 
@@ -104,6 +105,7 @@ function resetSetting(key) {
 
 
 module.exports = {
+    DEFAULT_SETTINGS,
     initSettings,
     getSettings,
     saveSettings,
