@@ -1,3 +1,6 @@
+// Todo: autoupgrade for installed localapps, will be useful if we change file structure
+
+
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
