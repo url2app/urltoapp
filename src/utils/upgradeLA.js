@@ -1,4 +1,4 @@
-//seems still a bit dangerous, thats why this feature is disabled by default
+//seems still a bit unstable, thats why this feature is disabled by default
 //enable with 'u2a configure autoupgrade enable'
 
 
@@ -34,10 +34,10 @@ function extractDimensionsFromMainJs(mainJsPath) {
 
         const mainJsContent = fs.readFileSync(mainJsPath, 'utf8');
 
-        const widthMatch = mainJsContent.match(/width\s*:\s*(\d+)/);
+        const widthMatch = mainJsContent.match(/const\s+WINDOW_WIDTH\s*=\s*(\d+)/);
         const width = widthMatch ? parseInt(widthMatch[1], 10) : 1200;
 
-        const heightMatch = mainJsContent.match(/height\s*:\s*(\d+)/);
+        const heightMatch = mainJsContent.match(/const\s+WINDOW_HEIGHT\s*=\s*(\d+)/);
         const height = heightMatch ? parseInt(heightMatch[1], 10) : 800;
 
         logger.debug(`Extracted dimensions from main.js: ${width}x${height}`);
