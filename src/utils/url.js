@@ -2,15 +2,18 @@ const axios = require('axios');
 const { sanitizeInput } = require('./sanitize');
 
 async function normalizeUrl(url) {
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    try {
-      await axios.get('https://' + url);
-      url = 'https://' + url;
-    } catch (error) {
-      url = 'http://' + url;
-    }
+  const sanitizedUrl = sanitizeInput(url);
+  
+  if (sanitizedUrl.startsWith('http://') || sanitizedUrl.startsWith('https://')) {
+    return sanitizedUrl;
   }
-  return sanitizeInput(url);
+  
+  try {
+    await axios.get('https://' + sanitizedUrl);
+    return 'https://' + sanitizedUrl;
+  } catch (error) {
+    return 'http://' + sanitizedUrl;
+  }
 }
 
 function getDomainName(url) {
