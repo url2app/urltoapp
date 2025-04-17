@@ -33,6 +33,9 @@
         "sharp": "^0.33.5",
         "is-admin": "^3.0.0"
     },
+    "devDependencies": {
+        "vitest": "^3.1.1"
+    },
     "homepage": "https://urltoapp.xyz",
     "repository": {
         "type": "git",
