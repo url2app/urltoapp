@@ -8,7 +8,8 @@ on:
       - main
 
 jobs:
-  verify-and-publish:
+  setup:
+    name: Setup Environment
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,24 +19,70 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org/
+      
+      - name: Install dependencies
+        run: npm i -D
+      
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+  test:
+    name: Run Tests
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       
       - name: Install dependencies
         run: npm i -D
       
       - name: Run tests
         run: npm test
+
+  version-check:
+    name: Check Version Change
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.check-version.outputs.version_changed }}
+      current_version: ${{ steps.check-version.outputs.current_version }}
+      previous_version: ${{ steps.check-version.outputs.previous_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       
       - name: Check version change
         id: check-version
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "Current version: $CURRENT_VERSION"
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           
           git checkout HEAD^ package.json
           PREVIOUS_VERSION=$(node -p "require('./package.json').version")
           echo "Previous version: $PREVIOUS_VERSION"
+          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
           
           git checkout HEAD package.json
           
@@ -46,9 +93,28 @@ jobs:
             echo "Version unchanged, still at $CURRENT_VERSION"
             echo "version_changed=false" >> $GITHUB_OUTPUT
           fi
+
+  publish:
+    name: Publish to NPM
+    needs: version-check
+    runs-on: ubuntu-latest
+    if: needs.version-check.outputs.version_changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      
+      - name: Install dependencies
+        run: npm i -D
+      
+      - name: Log version change
+        run: echo "Publishing version change from ${{ needs.version-check.outputs.previous_version }} to ${{ needs.version-check.outputs.current_version }}"
       
       - name: Publish to NPM
-        if: steps.check-version.outputs.version_changed == 'true'
-        run: echo "hello, npm!"
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
