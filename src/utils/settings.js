@@ -22,7 +22,7 @@ function initSettings(reset = false) {
                 currentSettings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
                 logger.debug('Existing settings loaded');
             } catch (err) {
-                logger.debug(`Error reading existing settings.json, will reinitialize`, err.message);
+                logger.debug(`Error reading existing settings.json, will reset`, err.message);
                 currentSettings = {};
             }
         }
