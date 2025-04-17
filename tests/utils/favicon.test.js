@@ -5,6 +5,7 @@ const { getFavicon, processFavicon } = require('../../src/utils/favicon');
 const { getDomainName, normalizeUrl } = require('../../src/utils/url');
 const { APPS_DIR } = require('../../src/utils/config');
 
+console.log = jest.fn();
 jest.mock('axios');
 jest.mock('fs');
 jest.mock('../../src/utils/logger', () => {

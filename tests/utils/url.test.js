@@ -2,6 +2,7 @@ const { normalizeUrl, getDomainName } = require('../../src/utils/url');
 const axios = require('axios');
 
 jest.mock('axios');
+console.log = jest.fn();
 
 describe('normalizeUrl', () => {
   beforeEach(() => {

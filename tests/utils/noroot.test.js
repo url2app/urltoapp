@@ -2,6 +2,7 @@ const os = require('os');
 const isAdmin = require('is-admin');
 const { checkNotRoot } = require('../../src/utils/noroot');
 
+console.log = jest.fn();
 jest.mock('is-admin');
 jest.mock('os', () => ({
   platform: jest.fn(),
