@@ -1,4 +1,6 @@
-node_modules/
-.github/
-package-lock.json
-.gitignore
+**/*
+!/src/**
+!index.js
+!LICENSE
+!package.json
+!README.md
