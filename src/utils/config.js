@@ -1,9 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const Logger = require('./logger');
 
-const logger = new Logger('config');
 
 const CONFIG_DIR = path.join(os.homedir(), '.u2a');
 const APPS_DIR = path.join(CONFIG_DIR, 'apps');
@@ -35,14 +33,12 @@ function readDB() {
 
 function writeDB(data) {
   fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-  logger.debug(`DB written with:`, data);
 }
 
 function addAppToDB(appName, appData) {
   const db = readDB();
   db[appName] = appData;
   writeDB(db);
-  logger.debug(`Application recorded in the database:`, appName);
 }
 
 module.exports = {
