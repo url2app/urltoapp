@@ -8,15 +8,47 @@ on:
       - main
 
 jobs:
-
-  publish-npm:
+  verify-and-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
-      - run: npm publish
+      
+      - name: Install dependencies
+        run: npm i -D
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Check version change
+        id: check-version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          git checkout HEAD^ package.json
+          PREVIOUS_VERSION=$(node -p "require('./package.json').version")
+          echo "Previous version: $PREVIOUS_VERSION"
+          
+          git checkout HEAD package.json
+          
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version unchanged, still at $CURRENT_VERSION"
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Publish to NPM
+        if: steps.check-version.outputs.version_changed == 'true'
+        run: echo "hello, npm!"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
