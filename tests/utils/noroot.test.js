@@ -18,7 +18,7 @@ jest.mock('../../src/utils/logger', () => {
   }));
 });
 
-jest.spyOn(process, 'exit').mockImplementation(() => {});
+jest.spyOn(process, 'exit').mockImplementation(() => { });
 
 const originalGetuid = process.getuid;
 
@@ -40,12 +40,12 @@ afterAll(() => {
 });
 
 describe('checkNotRoot', () => {
-  it('should allow root if allowRoot=true', async () => {
+  test('should allow root if allowRoot=true', async () => {
     await checkNotRoot(true);
     expect(process.exit).not.toHaveBeenCalled();
   });
 
-  it('should exit if on win32 and is admin', async () => {
+  test('should exit if on win32 and is admin', async () => {
     os.platform.mockReturnValue('win32');
     isAdmin.mockResolvedValue(true);
 
@@ -54,7 +54,7 @@ describe('checkNotRoot', () => {
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
-  it('should not exit if on win32 and not admin', async () => {
+  test('should not exit if on win32 and not admin', async () => {
     os.platform.mockReturnValue('win32');
     isAdmin.mockResolvedValue(false);
 
@@ -63,9 +63,9 @@ describe('checkNotRoot', () => {
     expect(process.exit).not.toHaveBeenCalled();
   });
 
-  it('should exit if on linux and process uid is 0', async () => {
+  test('should exit if on linux and process uid is 0', async () => {
     os.platform.mockReturnValue('linux');
-    
+
     process.getuid = jest.fn(() => 0);
 
     await checkNotRoot();
@@ -73,19 +73,19 @@ describe('checkNotRoot', () => {
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
-  it('should not exit if on linux and process uid not 0', async () => {
+  test('should not exit if on linux and process uid not 0', async () => {
     os.platform.mockReturnValue('linux');
-  
+
     process.getuid = jest.fn(() => 69);
-  
+
     await checkNotRoot();
-  
+
     expect(process.exit).not.toHaveBeenCalled();
   });
 
-  it('should exit if on darwin and process uid is 0', async () => {
+  test('should exit if on darwin and process uid is 0', async () => {
     os.platform.mockReturnValue('darwin');
-    
+
     process.getuid = jest.fn(() => 0);
 
     await checkNotRoot();
@@ -93,17 +93,17 @@ describe('checkNotRoot', () => {
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
-  it('should not exit if on darwin and process uid not 0', async () => {
+  test('should not exit if on darwin and process uid not 0', async () => {
     os.platform.mockReturnValue('darwin');
-  
+
     process.getuid = jest.fn(() => 69);
-  
+
     await checkNotRoot();
-  
+
     expect(process.exit).not.toHaveBeenCalled();
   });
 
-  it('should exit on unsupported platform', async () => {
+  test('should exit on unsupported platform', async () => {
     os.platform.mockReturnValue('templeos');
 
     await checkNotRoot();

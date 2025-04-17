@@ -9,18 +9,18 @@ describe('normalizeUrl', () => {
     jest.clearAllMocks();
   });
 
-  it('should return the same url if starts with https://', async () => {
+  test('should return the same url if starts with https://', async () => {
     const url = 'https://example.com';
-    
+
     const spy = jest.spyOn(axios, 'get');
-    
+
     const result = await normalizeUrl(url);
 
     expect(result).toBe(url);
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('should add https:// and do a test request', async () => {
+  test('should add https:// and do a test request', async () => {
     axios.get.mockResolvedValueOnce({});
 
     const result = await normalizeUrl('example.com');
@@ -29,7 +29,7 @@ describe('normalizeUrl', () => {
     expect(axios.get).toHaveBeenCalledWith('https://example.com');
   });
 
-  it('should add http:// if the request fails', async () => {
+  test('should add http:// if the request fails', async () => {
     axios.get.mockImplementationOnce(() => {
       return Promise.reject(new Error('HTTPS failed'));
     });
@@ -42,15 +42,15 @@ describe('normalizeUrl', () => {
 });
 
 describe('getDomainName', () => {
-  it('should return example.com if given https://example.com/helloworld', () => {
+  test('should return example.com if given https://example.com/helloworld', () => {
     expect(getDomainName('https://example.com/helloworld')).toBe('example.com');
   });
 
-  it('should return sub.example.com if given https://sub.example.com/helloworld', () => {
+  test('should return sub.example.com if given https://sub.example.com/helloworld', () => {
     expect(getDomainName('https://sub.example.com/helloworld')).toBe('sub.example.com');
   });
 
-  it('should return example.com if given https://www.example.com/helloworld', () => {
+  test('should return example.com if given https://www.example.com/helloworld', () => {
     expect(getDomainName('https://www.example.com/helloworld')).toBe('example.com');
   });
 });

@@ -38,7 +38,7 @@ describe('getFavicon', () => {
         jest.clearAllMocks();
     });
 
-    it('should download and save favicon.ico', async () => {
+    test('should download and save favicon.ico', async () => {
         axios.get.mockResolvedValueOnce({
             headers: { 'content-type': 'image/x-icon' },
             data: iconBuffer,
@@ -53,7 +53,7 @@ describe('getFavicon', () => {
         expect(fs.writeFileSync).toHaveBeenCalledWith(iconPathInAppDir, iconBuffer);
     });
 
-    it('should return default icon if download fails and default exists', async () => {
+    test('should return default icon if download fails and default exists', async () => {
         axios.get.mockRejectedValueOnce(new Error('Download failed'));
         fs.existsSync.mockReturnValue(true);
 
@@ -62,7 +62,7 @@ describe('getFavicon', () => {
         expect(result).toBe(defaultIconPath);
     });
 
-    it('should return null if no default icon exists', async () => {
+    test('should return null if no default icon exists', async () => {
         axios.get.mockRejectedValueOnce(new Error('Download failed'));
         fs.existsSync.mockReturnValue(false);
 
@@ -78,7 +78,7 @@ describe('processFavicon', () => {
         jest.clearAllMocks();
     });
 
-    it('should skip processing if name is favicon.ico', async () => {
+    test('should skip processing if name is favicon.ico', async () => {
         const inputPath = path.join('/some/folder', 'favicon.ico');
         const expectedPath = path.join('/some/folder', 'favicon256.ico');
 
@@ -86,7 +86,7 @@ describe('processFavicon', () => {
         expect(result).toBe(expectedPath);
     });
 
-    it('should return path on error', async () => {
+    test('should return path on error', async () => {
         fs.readFileSync.mockImplementation(() => {
             throw new Error('read error');
         });
