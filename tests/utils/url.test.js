@@ -10,8 +10,9 @@ describe('normalizeUrl', () => {
 
   it('should return the same url if starts with https://', async () => {
     const url = 'https://example.com';
-    const spy = jest.spyOn(axios, 'get').mockResolvedValueOnce({});
-
+    
+    const spy = jest.spyOn(axios, 'get');
+    
     const result = await normalizeUrl(url);
 
     expect(result).toBe(url);
@@ -19,16 +20,18 @@ describe('normalizeUrl', () => {
   });
 
   it('should add https:// and do a test request', async () => {
-    const spy = jest.spyOn(axios, 'get').mockResolvedValueOnce({});
+    axios.get.mockResolvedValueOnce({});
 
     const result = await normalizeUrl('example.com');
 
     expect(result).toBe('https://example.com');
-    expect(spy).toHaveBeenCalledWith('https://example.com');
+    expect(axios.get).toHaveBeenCalledWith('https://example.com');
   });
 
   it('should add http:// if the request fails', async () => {
-    axios.get.mockRejectedValueOnce(new Error('HTTPS failed'));
+    axios.get.mockImplementationOnce(() => {
+      return Promise.reject(new Error('HTTPS failed'));
+    });
 
     const result = await normalizeUrl('example.com');
 
