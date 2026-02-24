@@ -2,7 +2,7 @@
   <a href="https://urltoapp.xyz" style="display: block; text-align: center;">
     <img
       alt="Image of this repo"
-      src="https://togp.xyz?owner=url2app&repo=urltoapp&theme=json-dark-all&cache=false"
+      src="https://togp.douxx.tech?owner=url2app&repo=urltoapp&theme=json-dark-all&cache=false"
       type="image/svg+xml"
       style="border-radius: 20px; overflow: hidden;"
     />
