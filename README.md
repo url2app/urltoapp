@@ -1,3 +1,6 @@
+> [!NOTE]
+> This project has been archived, thanks for everyone's support!
+
 <div align="center">
   <a href="https://urltoapp.xyz" style="display: block; text-align: center;">
     <img
